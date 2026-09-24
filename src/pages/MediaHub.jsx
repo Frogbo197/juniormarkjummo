@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { photos } from '../lib/photos'
+import { memories, memoryForPhoto } from '../data/memories'
 import { filterPhotos } from '../lib/archive'
 import { Chips, Empty, PageIntro, SectionTitle } from './shared'
 
 const library = photos.map((p, i) => ({
   ...p,
+  memoryId: memoryForPhoto(p.file)?.id,
+  era: memoryForPhoto(p.file)?.era,
   person: [0, 1, 4, 10, 12, 14, 15].includes(i)
     ? 'duo'
     : i === 3
@@ -23,16 +26,24 @@ export default function MediaHub({ openPhoto }) {
   const [query, setQuery] = useState(''),
     [person, setPerson] = useState('all'),
     [topic, setTopic] = useState('all'),
+    [era, setEra] = useState(() => new URLSearchParams(location.hash.split('?')[1]).get('era') || 'all'),
+    [source, setSource] = useState('all'),
     [sort, setSort] = useState('original'),
     [limit, setLimit] = useState(8)
   let items = filterPhotos(library, { query, person, topic })
+    .filter((photo) => (era === 'all' || photo.era === era) && (source === 'all' || (source === 'official' ? photo.credit === 'GMMTV' : photo.credit !== 'GMMTV')))
+  useEffect(() => {
+    const sync = () => { setEra(new URLSearchParams(location.hash.split('?')[1]).get('era') || 'all'); setLimit(8) }
+    window.addEventListener('hashchange', sync)
+    return () => window.removeEventListener('hashchange', sync)
+  }, [])
   if (sort === 'title') items = [...items].sort((a, b) => a.title.localeCompare(b.title))
   if (sort === 'reverse') items = [...items].reverse()
   return (
     <>
       <PageIntro
         eyebrow="CELESTIAL ARCHIVE • PHOTO VAULT"
-        title="Kho Truyền Thông Đa Tầng"
+        title="Visual Archive · Kho Truyền Thông"
         description="Lưu giữ ánh sáng sân khấu, những khoảnh khắc đời thường và bé linh vật Jummo."
       >
         <div className="stat-pill">
@@ -41,6 +52,8 @@ export default function MediaHub({ openPhoto }) {
         </div>
       </PageIntro>
       <section className="archive-panel media-filters">
+        <Chips label="Editorial era" value={era} onChange={(value) => { setEra(value); setLimit(8) }} options={[[ 'all', 'All eras' ], ...memories.map((memory) => [memory.era, memory.title])]} />
+        <Chips label="Photo source" value={source} onChange={(value) => { setSource(value); setLimit(8) }} options={[[ 'all', 'All sources' ], ['official', 'Official source · GMMTV'], ['supplied', 'Fan / supplied collection']]} />
         <Chips
           label="Nhân vật"
           value={person}
@@ -82,7 +95,7 @@ export default function MediaHub({ openPhoto }) {
             placeholder="Nhập từ khóa…"
           />
         </label>
-        <p className="muted">Ảnh chưa có ngày chụp xác thực nên chưa phân loại theo năm.</p>
+        <p className="muted">Undated archive · Ảnh chưa có ngày chụp xác thực nên chưa phân loại theo năm. Era links are editorial associations, not confirmation of where or when a photo was taken.</p>
       </section>
       <div className="archive-heading toolbar">
         <h2>Phòng Lưu Trữ Hình Ảnh</h2>
@@ -106,6 +119,7 @@ export default function MediaHub({ openPhoto }) {
             <div>
               <h3>{p.title}</h3>
               <p>{p.credit}</p>
+              {p.memoryId && <a href={`#/timeline?era=${p.era}&memory=${p.memoryId}`}>Related editorial memory ↗</a>}
               <a href={p.src} download={p.file}>
                 Tải ảnh gốc ↓
               </a>

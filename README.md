@@ -1,130 +1,272 @@
-# JuniorMark — The Celestial Record Store
 
-Giao diện React + Vite dựa trên frame **Studio Home (2007:2)** trong Figma được cung cấp. Chức năng tài khoản dùng **Supabase Auth**, hồ sơ lưu trong **PostgreSQL của Supabase**. Không dùng Firebase.
+# 🌌 JuniorMark - The Celestial Record Store
 
-## 1. Chạy giao diện trước
+Fansite **React + Vite** dành cho JuniorMark, phát triển từ thiết kế **Studio Home (Figma frame 2007:2)** và mở rộng theo hướng **Celestial Archive**.
 
-Yêu cầu Node.js đáp ứng Vite 8 (khuyến nghị Node 22.12+ hoặc Node 24 LTS) và npm.
+Website tập trung vào hành trình JuniorMark, media, lịch, cộng đồng fandom và các tương tác cùng Jummo.
 
-```powershell
+> Backend và tài khoản do maintainer của repository quản lý. README này tập trung vào giao diện, trải nghiệm và chức năng phía client.
+
+## 🚀 Chạy project
+
+Yêu cầu:
+
+- Node.js tương thích Vite 8
+- Khuyến nghị Node 22.12+ hoặc Node 24 LTS
+- npm
+
+```bash
 npm install
 npm run dev
 ```
 
-Mở địa chỉ hiển thị trong terminal, thường là `http://localhost:5173`.
+Mặc định truy cập tại:
 
-Không cần Supabase để xem giao diện. Khi chưa cấu hình, biểu mẫu vẫn mở nhưng nút gửi bị khóa và có thông báo rõ ràng; không tạo tài khoản/session giả.
-
-## 2. Những phần đã có
-
-- Header, hai ảnh hero, mâm đĩa theo bố cục thiết kế.
-- Logo người dùng cung cấp trên header và favicon. Thư viện gồm 14 ảnh người dùng gửi và 2 ảnh bổ sung từ GMMTV; mở từng ảnh để xem credit/nguồn nếu có. Trên điện thoại, hai ảnh hero xếp dọc để giữ cả hai gương mặt.
-- Nút **Warm Midnight Glow tại footer** (Figma node 2007:467): đổi toàn trang và dialog giữa navy tối và kem/be ấm. Lựa chọn được ghi nhớ sau khi tải lại; vẫn đổi được nếu trình duyệt chặn lưu trữ.
-- Đếm ngược sinh nhật Junior/Mark theo UTC+7, chúc mừng trong ngày sinh nhật, xuất file lịch `.ics` lặp hàng năm.
-- Jummo đổi lời chào theo tâm trạng; gallery mở ảnh lớn; thẻ nội dung mở phần giới thiệu; timeline cơ bản.
-- Đăng ký, đăng nhập, đăng xuất trên thiết bị hiện tại; kiểm tra biểu mẫu, ẩn/hiện mật khẩu, chờ gửi, thông báo lỗi và xác nhận email.
-- Khôi phục session khi tải lại và đọc hồ sơ riêng từ database.
-- Responsive, menu điện thoại, focus trong dialog, phím Escape, hỗ trợ reduced-motion.
-
-## 3. Tạo Supabase
-
-1. Truy cập https://supabase.com/dashboard và tạo một project. Chọn vùng gần người dùng, lưu mật khẩu database ở nơi riêng của bạn.
-2. Vào **SQL Editor**, tạo truy vấn, dán nội dung `supabase/001_fan_profiles.sql`, rồi chạy **một lần** trên project mới. Migration chạy trong transaction; nếu xảy ra lỗi, xử lý lỗi trước khi chạy lại.
-3. Trong **Authentication**, bật đăng ký bằng **Email**. Nên bật **Confirm email** và đặt độ dài mật khẩu tối thiểu 8 ký tự để khớp biểu mẫu.
-4. Tìm **Project URL** và **Publishable key** trong cài đặt API/Connect của project. Legacy `anon` key cũng dùng được. Không dùng `service_role`, `sb_secret_...` hoặc mật khẩu database trong frontend.
-5. Tạo file `.env.local` tại thư mục gốc bằng cách sao chép `.env.example`:
-
-```dotenv
-VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+```text
+http://localhost:5173
 ```
 
-6. Trong **Authentication → URL Configuration**, đặt Site URL theo địa chỉ bạn dùng khi chạy, ví dụ `http://localhost:5173`. Thêm redirect URL đó, và `http://127.0.0.1:5173` nếu dùng bản preview tại địa chỉ này. Khi triển khai, thay/thêm domain HTTPS thật của website.
-7. Dừng rồi chạy lại `npm run dev` để Vite nạp biến môi trường mới.
+---
 
-Tên mục trong dashboard có thể thay đổi; đối chiếu [tài liệu Supabase React](https://supabase.com/docs/guides/getting-started/quickstarts/reactjs), [quản lý user](https://supabase.com/docs/guides/auth/managing-user-data) và [redirect URL](https://supabase.com/docs/guides/auth/redirect-urls).
+## ✨ Tính năng chính
 
-**Email production:** cấu hình SMTP riêng trước khi mở cho fan thật. Dịch vụ email mặc định của Supabase có giới hạn và có thể chỉ gửi đến địa chỉ được cho phép trong tổ chức. Xem [SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
+| Khu vực | Nội dung |
+|---|---|
+| 🏠 **Studio** | Hero, record player, Living Dashboard, sinh nhật, Memory of the Day và Jummo Guide |
+| 🗂️ **Archive** | Profiles, Constellation / Timeline và Visual Archive |
+| 🪐 **Orbit** | Schedule, My Orbit, memories/events đã lưu và tiến độ khám phá |
+| 🌠 **Community** | Starry Sky, Community Galaxy và Wall of Melody |
+| 🐣 **Jummo World** | Mood GIF, Jummo Rain, secret letter, goodies và quiz |
+| 🎫 **Fan Hub** | Fan Projects, New Fan Guide, Support Guide và Celestial Pass |
 
-## 4. Kiểm tra tài khoản sau khi cấu hình
+---
 
-1. Mở **Đăng nhập → Đăng ký ngay**, nhập tên, email thật của bạn, mật khẩu và xác nhận mật khẩu.
-2. Nếu bật Confirm email: kiểm tra thư, bấm xác nhận, sau đó quay lại trang/đăng nhập. Trạng thái chờ xác nhận không được xem là đã đăng nhập.
-3. Khi đã đăng nhập, header hiện **Tài khoản**. Mở ra để xem tên và email.
-4. Tải lại trang: tài khoản vẫn được khôi phục.
-5. Trong Supabase, kiểm tra `Authentication → Users` và bảng `public.fan_profiles` có cùng UUID. Hồ sơ được tạo bằng trigger trong transaction đăng ký.
-6. Bấm **Đăng xuất**: header trở về Đăng nhập; tải lại vẫn ở trạng thái khách.
-7. Kiểm tra phân quyền bằng hai tài khoản thử nghiệm: mỗi người chỉ đọc/sửa được `display_name` của hồ sơ chính mình. Khách chưa đăng nhập không đọc được bảng. SQL Editor thường chạy với quyền quản trị nên không dùng kết quả ở đó để kết luận RLS đang chặn người dùng.
+## 🎨 UI / UX
 
-Trình duyệt không lưu mật khẩu do ứng dụng tự viết. Supabase SDK tự quản lý token phiên đăng nhập; token là thông tin nhạy cảm, không log hoặc chia sẻ token.
+- Glassmorphism có kiểm soát cho header, menu, dialog, card và control.
+- Hỗ trợ dark / light theme và ghi nhớ lựa chọn.
+- Navigation desktop được gom thành 4 khu chính: **Studio, Archive, Orbit, Community**.
+- Mobile navigation dùng menu dọc, tap target lớn và Archive submenu mở theo chiều dọc.
+- Responsive cho desktop, tablet và mobile.
+- Hỗ trợ keyboard navigation, skip link, focus state, `Escape` và `prefers-reduced-motion`.
 
-## 5. Đọc mã theo thứ tự
+---
+
+## 🌌 Starry Sky
+
+Starry Sky là khu vực cộng đồng tương tác chính của website.
+
+- Nền sao nhiều lớp chuyển động chậm và chớp sáng.
+- Các layer sao có tốc độ khác nhau để tạo chiều sâu.
+- Sky hiển thị gần full viewport.
+- Có chế độ **Full Sky** để xem toàn màn hình.
+- Community stars vẫn có thể click và tương tác.
+- Ưu tiên hiển thị **Your Star** của người dùng.
+- Có chức năng **Find My Star**.
+- Khi gửi ước nguyện thành công, ngôi sao sẽ có hiệu ứng bay lên trời rồi xuất hiện tại vị trí thật.
+
+---
+
+## 🐣 Jummo
+
+Jummo không chỉ nằm trong Jummo World mà còn đóng vai trò UX Companion trong website.
+
+| Khu vực | Jummo |
+|---|---|
+| Studio | Guide / Welcome |
+| Timeline | Hướng dẫn khám phá memory |
+| Schedule | Jummo Calendar |
+| Media | Jummo Camera |
+| 404 | Sleeping Jummo |
+
+Jummo World gồm:
+
+- Mood GIF
+- Jummo Rain
+- Secret Letter
+- Goodies
+- Quiz
+
+**Jummo Rain** hiển thị 20 mascot rơi với vị trí, tốc độ và kích thước ngẫu nhiên.
+
+---
+
+## 🖼️ Archive & Media
+
+### Profiles
+
+- Chọn Junior / Mark / Jummo.
+- Mở dossier nhanh bằng `Discover`.
+- Liên kết tới hồ sơ đầy đủ và memory liên quan.
+
+### Constellation of Memories
+
+- Hiển thị hành trình JuniorMark dưới dạng chòm sao.
+- Preview memory khi tương tác.
+- Hỗ trợ keyboard navigation.
+- Theo dõi tiến độ khám phá.
+
+### Media Hub
+
+- Tìm kiếm không dấu.
+- Filter theo nhân vật, chủ đề, era và nguồn.
+- Sort ảnh.
+- Lightbox.
+- Tải ảnh gốc.
+- Liên kết sang memory và profile liên quan.
+
+---
+
+## 📅 Schedule & My Orbit
+
+### Schedule
+
+- Month / List view trên desktop.
+- Agenda view trên mobile.
+- Lọc sự kiện.
+- Đổi tháng / năm.
+- Export file `.ics`.
+- Event demo hoặc chưa xác minh luôn được ghi nhãn rõ.
+
+### My Orbit
+
+Lưu lại:
+
+- Memories
+- Events
+- Favorites
+- Progress
+- Badges
+
+Dữ liệu guest có thể được lưu cục bộ trên trình duyệt.
+
+---
+
+## 💫 Community
+
+### Community Galaxy
+
+- Lời nhắn fandom hiển thị dưới dạng các vì sao.
+- Filter theo nhóm.
+- Zoom.
+- Favorite.
+- Your Star.
+- Full Sky.
+
+### Wall of Melody
+
+- Lời nhắn hiển thị dưới dạng nốt nhạc.
+- Có âm thanh tổng hợp khi tương tác.
+
+Demo/local data luôn được phân biệt với dữ liệu production.
+
+---
+
+## 🧭 Routes
+
+| Route | Trang | Chức năng |
+|---|---|---|
+| `#/studio` | Studio | Hero, record player, dashboard, birthday, Jummo |
+| `#/profiles` | Character Stage | Chọn Junior / Mark / Jummo |
+| `#/profiles/junior` | Junior Profile | Hồ sơ Junior và journey |
+| `#/profiles/mark` | Mark Profile | Hồ sơ Mark và journey |
+| `#/timeline` | Constellation | Hành trình và memories |
+| `#/media` | Visual Archive | Search, filter, lightbox, download |
+| `#/schedule` | Schedule | Calendar, agenda mobile, ICS |
+| `#/orbit` | My Orbit | Saved items, progress, badges |
+| `#/account` | My Orbit / Account | Dữ liệu cá nhân và tiến độ |
+| `#/sky` | Starry Sky | Community Galaxy, Full Sky, Your Star |
+| `#/wall` | Wall of Melody | Community notes |
+| `#/jummo` | Jummo World | Mood, rain, letter, goodies, quiz |
+| `#/projects` | Fan Hub | Projects, guide, support, Celestial Pass |
+
+---
+
+## 🧩 File quan trọng
 
 | File | Vai trò |
-| --- | --- |
-| `src/index.css` | Bảng màu chung; theme sáng ở `:root[data-theme='light']` |
-| `src/App.css` | CSS chia mục 1–9, có phần responsive |
-| `src/App.jsx` | Ghép trang chủ, mở dialog và thao tác đăng xuất |
-| `src/components/Header.jsx` | Header/menu điện thoại/tài khoản |
-| `src/components/Hero.jsx` | Hai ảnh và tiêu đề đầu trang |
-| `src/components/RecordPlayer.jsx` | Mâm đĩa, danh sách bản thu, điều khiển audio |
-| `src/components/Birthdays.jsx` | Đếm ngược và tải lịch |
-| `src/components/Jummo.jsx` | Lời chào và chọn tâm trạng |
-| `src/components/Highlights.jsx` | Nội dung biên tập mẫu |
-| `src/components/Gallery.jsx` | Bộ ảnh, mở lightbox |
-| `src/lib/photos.js` | Danh sách 16 ảnh, vị trí thumbnail và nguồn ảnh |
-| `src/components/Footer.jsx` | Footer và vị trí nút theme gốc |
-| `src/components/ThemeToggle.jsx` | Đổi theme, lưu lựa chọn, đồng bộ giữa tab |
-| `src/components/Dialog.jsx` | Hộp thoại native, focus và Escape |
-| `src/features/auth/AuthDialog.jsx` | Biểu mẫu đăng nhập/đăng ký |
-| `src/features/auth/AuthProvider.jsx` | Gọi SDK Supabase, quản lý session và tải hồ sơ |
-| `src/features/auth/authContext.js` | Context dùng chung cho tài khoản |
-| `src/lib/supabase.js` | Khởi tạo kết nối từ `.env.local` |
-| `src/lib/helpers.js` | Validation, thông báo lỗi, ngày sinh nhật |
-| `supabase/001_fan_profiles.sql` | Bảng hồ sơ, trigger, quyền cột và RLS |
+|---|---|
+| `src/App.jsx` | Layout, routing và các khu chính |
+| `src/index.css` | Theme và màu sắc chung |
+| `src/App.css` | CSS chính của Studio |
+| `src/components/Header.jsx` | Header và navigation |
+| `src/components/Hero.jsx` | Hero |
+| `src/components/RecordPlayer.jsx` | Record player |
+| `src/components/Birthdays.jsx` | Countdown sinh nhật |
+| `src/components/ThemeToggle.jsx` | Dark / light theme |
+| `src/components/Dialog.jsx` | Dialog và focus |
+| `src/data/memories.js` | Nguồn dữ liệu memory chung |
+| `src/pages/shared.jsx` | Shared UI components |
+| `src/pages/Pages.css` | Visual system, glass và responsive |
+| `src/pages/StarSkyBackground.jsx` | Background Starry Sky |
+| `src/pages/StarSkyBackground.css` | Star drift / twinkle animation |
+| `src/pages/CharacterStage.jsx` | Character selector |
+| `src/pages/ProfileDossier.jsx` | Dossier nhanh |
+| `src/pages/Profiles.jsx` | Hồ sơ đầy đủ |
+| `src/pages/Timeline.jsx` | Constellation of Memories |
+| `src/pages/MediaHub.jsx` | Visual Archive |
+| `src/pages/Schedule.jsx` | Calendar / agenda / ICS |
+| `src/pages/Community.jsx` | Starry Sky và Wall of Melody |
+| `src/pages/JummoWorld.jsx` | Jummo World và Jummo Rain |
+| `src/pages/Projects.jsx` | Fan Hub |
+| `src/pages/MyOrbit.jsx` | Saved data, progress và badges |
+| `src/lib/photos.js` | Ảnh, credit và metadata |
+| `src/lib/archive.js` | Search, calendar, quiz, download, audio |
+| `src/lib/helpers.js` | Validation, theme và birthday |
+| `src/lib/useRoute.js` | Hash routing, focus và scroll |
 
-## 6. Giới hạn hiện tại
+---
 
-- Chưa kết nối project Supabase thật vì bạn chưa tạo project. Migration được chuẩn bị nhưng **chưa chạy trên dịch vụ của bạn**. Kiểm thử SDK trong máy dùng phản hồi giả ở ranh giới network, không thay thế kiểm thử đăng ký/email thật.
-- Playlist giữ các tên bản thu trong thiết kế dưới dạng minh họa. Chưa có audio được cung cấp nên nút phát đang khóa, thời lượng hiển thị `--:--`. Khi có bản thu phù hợp, điền `audioSrc` trong `RecordPlayer.jsx`; không tự bịa thời lượng/trạng thái đang phát.
-- Highlights/gallery đang là nội dung tĩnh, không phải tin tức đồng bộ. Metadata sự kiện tương lai trong mẫu không được coi là lịch phát hành đã xác minh.
-- Các trang đã được bổ sung như danh sách bên dưới. Chưa có trang admin; quản trị viên duyệt lời nhắn trực tiếp trong Supabase Dashboard. Lịch sự kiện, quỹ, fancam, bản thu, bộ sticker/photobook chưa có dữ liệu thật được ghi rõ trên giao diện, không tạo giao dịch hoặc file tải giả.
-- Logo và 14 ảnh gốc do người dùng cung cấp; mascot/icon lấy từ thiết kế tham khảo. Hai ảnh bổ sung có liên kết bài đăng GMMTV trong `src/lib/photos.js`. Giữ nguyên file gốc và watermark; credit không đồng nghĩa với quyền xuất bản. Font tải qua Google Fonts, có font hệ thống dự phòng khi mất mạng.
-- Chưa triển khai lên hosting; bản xem trước chạy trên máy hiện tại.
+## 📦 Jummo Assets
 
-## 7. Kiểm tra trước khi bàn giao
+| Asset | Sử dụng |
+|---|---|
+| `public/images/main_mas.png` | Studio / Timeline |
+| `public/images/camera_ms.png` | Media |
+| `public/images/calender_ms.png` | Schedule |
+| `public/images/sleep_ms.png` | 404 |
+| `public/images/jummo_rain.png` | Jummo Rain |
 
-```powershell
+---
+
+## ⚠️ Giới hạn hiện tại
+
+- Một số event và Fan Project là **DEMO / SAMPLE / UNCONFIRMED**.
+- Media chưa có ngày chụp đáng tin cậy cho toàn bộ ảnh.
+- Fan Projects không nhận quyên góp hoặc thực hiện giao dịch.
+- Không tạo file tải giả cho asset chưa được cung cấp.
+- Ảnh giữ watermark, credit và metadata nguồn khi có.
+- Demo/local community data không được trình bày như production data.
+- Shareable card không chứa email, UUID hoặc account ID.
+- Midnight Archive hiện vẫn là ý tưởng mở rộng.
+- Production hosting phụ thuộc môi trường deploy của repository.
+
+---
+
+## 🧪 Kiểm tra trước khi bàn giao
+
+```bash
 npm test
 npm run lint
 npm run build
 ```
 
-Bộ kiểm thử kiểm tra ngày biên sinh nhật, validation, ghi nhớ theme, luồng biểu mẫu và vòng đời session/hồ sơ. Thông tin kiểm tra trình duyệt được lưu tại `docs/verification.md`.
+Nên chạy lại các lệnh trên trước mỗi commit hoặc PR có thay đổi lớn về UI, routing hoặc interaction.
 
-## 8. Các trang bổ sung — đọc và chạy lần lượt
+---
 
-| Đường dẫn sau địa chỉ website | Mã nguồn | Chức năng |
-| --- | --- | --- |
-| `#/profiles` | `src/pages/CharacterStage.jsx`, `ProfileDossier.jsx` | Chọn Junior/Mark/Jummo bằng ảnh, mũi tên hoặc chấm; Discover mở modal; Overview/Filmography/Discography; đóng giữ nhân vật đang chọn |
-| `#/profiles/junior`, `#/profiles/mark` | `src/pages/Profiles.jsx` | Hồ sơ dài, Sun/Moon, voice memo chờ bản thu, hành trình |
-| `#/timeline` | `src/pages/Timeline.jsx` | Bốn cột mốc, nội dung và ảnh đổi theo lựa chọn |
-| `#/media` | `src/pages/MediaHub.jsx` | Tìm không dấu, lọc nhân vật/chủ đề, sắp xếp, xem/tải ảnh gốc |
-| `#/schedule` | `src/pages/Schedule.jsx` | Lịch tháng/danh sách, đổi tháng, lọc và xuất ICS; bật riêng lịch mẫu |
-| `#/sky`, `#/wall` | `src/pages/Community.jsx` | Sao/nốt nhạc, bộ lọc, form có kiểm tra, âm tổng hợp, chế độ local hoặc Supabase |
-| `#/jummo` | `src/pages/JummoWorld.jsx` | Chọn mood, Mưa Jummo, chạm 5 lần mở thư biên tập, tải mascot, quiz |
-| `#/projects` | `src/pages/Projects.jsx` | Tracker mẫu, từ điển tìm kiếm, checklist, soạn/sao chép lời cổ vũ, thẻ Baby Fan |
+## 📝 Quy ước dữ liệu
 
-Các component dùng chung nằm ở `src/pages/shared.jsx`; CSS dùng lại biến màu trong `src/pages/Pages.css`. Logic tìm kiếm, lịch, quiz, tải file và nốt nhạc nằm ở `src/lib/archive.js`. Hash routing hỗ trợ mở thẳng và tải lại trên static hosting.
+- `src/data/memories.js` là nguồn dữ liệu chung cho era và memory.
+- Tránh duplicate nội dung giữa Timeline, Profiles và Media.
+- Không tự suy đoán metadata chưa được xác minh.
+- Community, Schedule và Fan Projects phải phân biệt rõ dữ liệu thật với dữ liệu minh họa.
+- Interaction và animation mới phải tiếp tục hỗ trợ keyboard, focus và `prefers-reduced-motion`.
+- Không công khai email, UUID hoặc dữ liệu tài khoản nhạy cảm trên UI/share card.
 
-### Kết nối lời nhắn Supabase
+---
 
-1. Chạy `supabase/002_fan_messages.sql` sau migration 001, một lần trên project mới.
-2. Khi chưa có cấu hình, nội dung chỉ lưu tại localStorage với khóa `jm-demo-star` và `jm-demo-note`. Đây không phải dữ liệu công khai và không tự chuyển sang Supabase.
-3. Khi đã cấu hình, người dùng đăng nhập mới được gửi. Client chỉ gửi tên, địa điểm, nội dung và bản sắc; trạng thái mặc định `pending`.
-4. Quản trị viên đọc nội dung trong Table Editor rồi đổi `status` thành `approved` hoặc `rejected`. Trình duyệt không có quyền tự duyệt/sửa trạng thái. Bài đã duyệt hiện khi mở lại trang.
-5. Không công khai UUID người gửi qua truy vấn frontend; chỉ đọc các cột phục vụ hiển thị. Các chỉ số trên UI đếm tập lời nhắn tải về (tối đa 100), không phải toàn bộ thống kê hệ thống.
+## 💛 JuniorMark Celestial Archive
 
-### Nội dung tham khảo
-
-Hai ảnh tách nền trong màn chọn được lấy từ file Figma gốc. Bố cục hộp thoại theo hai ảnh quy trình người dùng gửi thêm. Không sao chép tên thật/ngày sinh không nhất quán trong mockup. Fan Projects được dựng từ metadata Figma và nội dung dán vì Figma đã đạt giới hạn đọc trước khi lấy được context từng phần; cần đối chiếu hình chi tiết khi công cụ khả dụng trở lại.
+Một không gian nhỏ để lưu lại hành trình, hình ảnh, kỷ niệm và những lời nhắn của fandom dành cho JuniorMark.
+````

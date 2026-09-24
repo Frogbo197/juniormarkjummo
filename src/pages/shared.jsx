@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { downloadText, quizResult } from '../lib/archive'
+import { quizResult } from '../lib/archive'
+import ShareCardButton from '../components/ShareCardButton'
 
 export function PageIntro({ eyebrow, title, description, children }) {
   return (
@@ -39,12 +40,12 @@ export function Empty({ children }) {
     </p>
   )
 }
-export function Tip({ children }) {
+export function Tip({ children, title = 'Jummo nhắc bạn', className = '', image = '/images/jummo-mascot.png' }) {
   return (
-    <aside className="archive-tip">
-      <img src="/images/jummo-mascot.png" width="48" height="58" alt="Jummo" />
+    <aside className={`archive-tip ${className}`.trim()}>
+      <img src={image} width="48" height="58" alt="Jummo" />
       <div>
-        <b>Jummo nhắc bạn</b>
+        <b>{title}</b>
         <p>{children}</p>
       </div>
     </aside>
@@ -75,17 +76,7 @@ export function Quiz() {
           <img className="quiz-mascot" src="/images/jummo-mascot.png" alt="Thẻ Jummo" />
           <h3>{title}</h3>
           <p>Thẻ kỷ niệm vui dành riêng cho bạn.</p>
-          <button
-            className="primary-button"
-            onClick={() =>
-              downloadText(
-                'the-jummo.txt',
-                `JUMMO CELESTIAL PASS\n${title}\nThẻ kỷ niệm từ JuniorMark fansite, không phải chứng nhận chính thức.`,
-              )
-            }
-          >
-            Lưu thẻ kỷ niệm
-          </button>
+          <ShareCardButton card={{ title, subtitle: 'Celestial Soul · Quiz keepsake', lines: ['Thẻ kỷ niệm vui dành riêng cho bạn.'] }} filename="jummo-quiz" label="Lưu thẻ kỷ niệm PNG" />
           <button
             className="text-button"
             onClick={() => {

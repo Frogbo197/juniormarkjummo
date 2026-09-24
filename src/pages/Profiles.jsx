@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Chips, PageIntro, SectionTitle, Tip } from './shared'
-import { eras, photoPath } from './journeyData'
+import { photoPath } from './journeyData'
+import { memoriesForPerson } from '../data/memories'
 
 export default function Profiles({ person = 'duo' }) {
   const [selected, setSelected] = useState(person),
@@ -103,7 +104,7 @@ export default function Profiles({ person = 'duo' }) {
       </div>
       <SectionTitle eyebrow="CELESTIAL TRAJECTORY">The Vertical Couple Journey</SectionTitle>
       <div className="vertical-journey">
-        {eras.map((e, i) => (
+        {memoriesForPerson(selected).map((e, i) => (
           <article key={e.id}>
             <div>
               <span className="eyebrow">

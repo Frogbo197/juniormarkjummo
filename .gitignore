@@ -15,6 +15,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.sky-before-*.png
 
 # Editor directories and files
 .vscode/*

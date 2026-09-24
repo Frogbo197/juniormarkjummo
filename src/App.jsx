@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowUpRight, Heart, LoaderCircle, LogOut, Orbit } from 'lucide-react'
 import Header from './components/Header'
 import Hero from './components/Hero'
+import ArchiveDashboard from './components/ArchiveDashboard'
 import RecordPlayer from './components/RecordPlayer'
 import Birthdays from './components/Birthdays'
 import Jummo from './components/Jummo'
@@ -23,8 +24,11 @@ import Schedule from './pages/Schedule'
 import Community from './pages/Community'
 import JummoWorld from './pages/JummoWorld'
 import Projects from './pages/Projects'
+import MyOrbit from './pages/MyOrbit'
+import OrbitProvider from './features/orbit/OrbitProvider'
+import JummoCompanion from './components/JummoCompanion'
 
-function HomePage() {
+function HomePage({ setPlayerSlot }) {
   const auth = useAuth()
   const route = useRoute()
   const [dialog, setDialog] = useState(null)
@@ -65,13 +69,15 @@ function HomePage() {
       >
         Đi đến nội dung chính
       </a>
-      <Header auth={auth} openAuth={openAuth} openAccount={openAccount} route={route} />
+      <Header auth={auth} openAuth={openAuth} route={route} />
       {/* 1. Các khối trang chủ theo thứ tự frame Studio Home trong Figma. */}
-      <main className="page-content" id="main" tabIndex={-1}>
+      <main className={`page-content mode-${['studio', 'timeline', 'profiles', 'jummo', 'sky'].includes(route) ? 'immersive' : route.startsWith('profiles/') || route === 'media' ? 'editorial' : 'utility'}`} id="main" tabIndex={-1}>
+      <JummoCompanion route={route} />
         {route === 'studio' ? (
           <>
             <Hero />
-            <RecordPlayer />
+            <ArchiveDashboard />
+            <div id="record-player" ref={setPlayerSlot} />
             <Birthdays />
             <Jummo />
             <Highlights openStory={(story) => setDialog({ type: 'story', ...story })} />
@@ -131,10 +137,11 @@ function HomePage() {
             key={route}
             kind={route === 'sky' ? 'star' : 'note'}
             openAuth={openAuth}
-            showInfo={showInfo}
           />
         ) : route === 'jummo' ? (
           <JummoWorld openPhoto={openPhoto} showInfo={showInfo} />
+        ) : route === 'orbit' || route === 'account' ? (
+          <MyOrbit openAuth={openAuth} openAccount={openAccount} />
         ) : route === 'projects' ? (
           <Projects showInfo={showInfo} />
         ) : (
@@ -156,6 +163,9 @@ function HomePage() {
         <Dialog title={dialog.title} onClose={close} className="photo-dialog">
           <img className="lightbox-image" src={dialog.src} alt={dialog.alt} />
           <p className="muted">{dialog.credit}</p>
+          {dialog.memoryId && <a className="text-button" href={`#/timeline?era=${dialog.era}&memory=${dialog.memoryId}`} onClick={close}>Explore related memory ↗</a>}
+          {dialog.era && <a className="text-button" href={`#/media?era=${dialog.era}`} onClick={close}>Explore editorial era ↗</a>}
+          {dialog.person && dialog.person !== 'jummo' && <a className="text-button" href={`#/profiles/${dialog.person}`} onClick={close}>Explore profile ↗</a>}
           {dialog.source && (
             <a
               className="text-button photo-credit-link"
@@ -180,34 +190,6 @@ function HomePage() {
           >
             Ghé kênh GMMTV <ArrowUpRight size={16} />
           </a>
-        </Dialog>
-      )}
-      {dialog?.type === 'journey' && (
-        <Dialog title="Chòm sao kỷ niệm" onClose={close}>
-          <p className="dialog-intro">Ba dấu mốc trong góc lưu trữ JuniorMark.</p>
-          <ol className="journey-list">
-            <li>
-              <span>01</span>
-              <div>
-                <h3>Cherry Magic</h3>
-                <p>Jinta & Min — khởi đầu một hành trình.</p>
-              </div>
-            </li>
-            <li>
-              <span>02</span>
-              <div>
-                <h3>Perfect 10 Liners</h3>
-                <p>Faifa & Wine — thêm một chương đáng nhớ.</p>
-              </div>
-            </li>
-            <li>
-              <span>03</span>
-              <div>
-                <h3>My Romance Scammer</h3>
-                <p>Tim & Pai — tiếp nối những câu chuyện.</p>
-              </div>
-            </li>
-          </ol>
         </Dialog>
       )}
       {dialog?.type === 'account' && (
@@ -259,9 +241,13 @@ function HomePage() {
 }
 
 export default function App() {
+  const [playerSlot, setPlayerSlot] = useState(null)
   return (
     <AuthProvider>
-      <HomePage />
+      <OrbitProvider>
+      <HomePage setPlayerSlot={setPlayerSlot} />
+      <RecordPlayer heroTarget={playerSlot} />
+      </OrbitProvider>
     </AuthProvider>
   )
 }

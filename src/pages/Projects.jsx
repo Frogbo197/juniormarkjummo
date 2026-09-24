@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { normalize, downloadText } from '../lib/archive'
 import { Empty, PageIntro, SectionTitle, Tip } from './shared'
+import { memories } from '../data/memories'
+import ShareCardButton from '../components/ShareCardButton'
 const glossary = [
   ['Junior / Juju', 'Tên gọi thân mật dành cho Junior trong góc lưu trữ fansite.'],
   ['Mark / Markji', 'Tên gọi thân mật dành cho Mark trong góc lưu trữ fansite.'],
@@ -42,20 +44,20 @@ export default function Projects({ showInfo }) {
     <>
       <PageIntro
         eyebrow="CELESTIAL COMMUNITY HUB"
-        title="Dự Án Fandom & Cẩm Nang Cho Fan Mới"
+        title="Fan Hub"
         description="Một trạm nhỏ để tìm hiểu fandom, theo dõi các dự án và bắt đầu hành trình của bạn."
       >
         <Tip>Cùng tìm hiểu và cổ vũ theo nhịp riêng của bạn.</Tip>
       </PageIntro>
       <nav className="page-jump">
-        <a href="#/projects?section=tracker">Tiến độ Fan Projects</a>
-        <a href="#/projects?section=guide">Cẩm nang Baby Fan</a>
-        <a href="#/projects?section=vote">Trạm hướng dẫn Vote</a>
-        <a href="#/projects?section=stream">Streaming & Trend X</a>
+        <a href="#/projects?section=tracker">Fan Projects</a>
+        <a href="#/projects?section=guide">New Fan Guide / Glossary</a>
+        <a href="#/projects?section=vote">Support Guide</a>
+        <a href="#/projects?section=pass">Baby Fan / Celestial Pass</a>
       </nav>
       <section id="tracker">
-        <SectionTitle eyebrow="ONGOING CAMPAIGNS">
-          Fan Projects Tracker: Tiến Độ Đang Triển Khai
+        <SectionTitle eyebrow="Fan Projects · Demo concepts only">
+          Fan Projects · Chưa có chiến dịch được xác minh
         </SectionTitle>
         <p className="notice">
           Ba chiến dịch dưới đây là dữ liệu minh họa từ thiết kế. Website chưa mở quyên góp, không
@@ -74,7 +76,7 @@ export default function Projects({ showInfo }) {
                 }
                 alt="Ảnh minh họa dự án"
               />
-              <span className="eyebrow">DỰ ÁN MẪU • {progress}%</span>
+              <span className="eyebrow">DEMO / SAMPLE • DỰ ÁN MẪU • {progress}%</span>
               <h3>{title}</h3>
               <progress max="100" value={progress} />
               <p>
@@ -123,7 +125,8 @@ export default function Projects({ showInfo }) {
       </section>
       <div className="two-columns">
         <section className="archive-panel" id="vote">
-          <SectionTitle eyebrow="VOTING GUIDE">Hướng Dẫn Bình Chọn</SectionTitle>
+          <SectionTitle eyebrow="Support Guide">Hướng Dẫn Bình Chọn</SectionTitle>
+          <a className="text-button" href="#/projects?section=stream">Streaming & Trend X ↗</a>
           <p>
             Chưa có cuộc bình chọn được xác minh trong hệ thống. Khi tham gia, đọc điều lệ và giới
             hạn lượt tại cổng chính thức của từng giải.
@@ -186,14 +189,14 @@ export default function Projects({ showInfo }) {
       </div>
       <SectionTitle eyebrow="TRỌN BỘ KỶ NGUYÊN">Lộ Trình Khám Phá JuniorMark</SectionTitle>
       <div className="three-columns">
-        {['Cherry Magic', 'Perfect 10 Liners', 'Sunnymoon & ShineRise'].map((title) => (
-          <a className="archive-panel" href="#/timeline" key={title}>
-            <h3>{title}</h3>
+        {memories.map((memory) => (
+          <a className="archive-panel" href={`#/timeline?era=${memory.era}`} key={memory.id}>
+            <h3>{memory.title}</h3>
             <p>Khám phá cột mốc và ảnh trong kho lưu trữ →</p>
           </a>
         ))}
       </div>
-      <section className="archive-panel graduation">
+      <section className="archive-panel graduation" id="pass">
         <div>
           <SectionTitle eyebrow="JUMMO CELESTIAL PASS">Nhận Huy Hiệu Baby Fan</SectionTitle>
           <p>Hoàn thành checklist phía trên và ghi tên để nhận thẻ kỷ niệm của fansite.</p>
@@ -213,7 +216,7 @@ export default function Projects({ showInfo }) {
             disabled={checked.length !== checklist.length || name.trim().length < 2}
             onClick={() => setCertificate(true)}
           >
-            Khắc tên nhận chứng nhận
+            Tạo thẻ kỷ niệm fansite
           </button>
         </div>
         <div className="certificate">
@@ -223,17 +226,7 @@ export default function Projects({ showInfo }) {
           <p>{certificate ? 'Đã hoàn thành checklist' : 'Chờ hoàn thành checklist'}</p>
           <small>Thẻ kỷ niệm của fansite, không phải chứng nhận chính thức.</small>
           {certificate && (
-            <button
-              className="secondary-button"
-              onClick={() =>
-                downloadText(
-                  'baby-fan-pass.txt',
-                  `JUMMO CELESTIAL PASS\n${name.trim()}\nĐã hoàn thành checklist Baby Fan.\nThẻ kỷ niệm của fansite, không phải chứng nhận chính thức.`,
-                )
-              }
-            >
-              Lưu thẻ ↓
-            </button>
+            <ShareCardButton card={{ title: name.trim(), subtitle: 'Baby Fan · Jummo Celestial Pass', lines: ['Đã hoàn thành checklist Baby Fan.', 'Thẻ kỷ niệm của fansite, không phải chứng nhận chính thức.'] }} filename="baby-fan-pass" label="Lưu thẻ PNG ↓" />
           )}
         </div>
       </section>

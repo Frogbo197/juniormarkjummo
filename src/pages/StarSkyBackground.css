@@ -1,0 +1,89 @@
+.star-sky-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--text);
+  opacity: 0.55;
+}
+
+/* Tối ưu hóa render sao bằng GPU */
+.star-sky-background > div,
+.star-sky-background > div::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--star-size);
+  height: var(--star-size);
+  border-radius: 50%;
+  box-shadow: var(--star-shadows);
+}
+
+.star-sky-background > div {
+  will-change: transform, opacity;
+  animation-name: animStar, twinkle;
+  animation-duration: var(--star-duration), var(--twinkle-duration, 3s);
+  animation-timing-function: linear, ease-in-out;
+  animation-delay: 0s, var(--twinkle-delay, 0s);
+  animation-iteration-count: infinite, infinite;
+  animation-direction: normal, alternate;
+}
+
+.star-sky-background > div::after {
+  content: '';
+  top: 1000px;
+}
+
+/* Khai báo thông số các tầng sao */
+.star-sky-background .stars {
+  --star-size: 1px;
+  --star-duration: 18s;
+  --twinkle-duration: 2s;
+  --twinkle-delay: 0s;
+  --star-shadows: 0.00vw 0px currentColor, 73.14vw 137px currentColor, 46.27vw 275px currentColor, 19.41vw 412px currentColor, 92.55vw 550px currentColor, 65.69vw 687px currentColor, 38.82vw 825px currentColor, 11.96vw 963px currentColor, 85.10vw 100px currentColor, 58.23vw 238px currentColor, 31.37vw 375px currentColor, 4.51vw 513px currentColor, 77.64vw 651px currentColor, 50.78vw 788px currentColor, 23.92vw 926px currentColor, 97.06vw 63px currentColor, 70.19vw 201px currentColor, 43.33vw 339px currentColor, 16.47vw 476px currentColor, 89.60vw 614px currentColor, 62.74vw 751px currentColor, 35.88vw 889px currentColor, 9.01vw 26px currentColor, 82.15vw 164px currentColor, 55.29vw 302px currentColor, 28.42vw 439px currentColor, 1.56vw 577px currentColor, 74.70vw 714px currentColor, 47.84vw 852px currentColor, 20.97vw 990px currentColor, 94.11vw 127px currentColor, 67.25vw 265px currentColor, 40.38vw 402px currentColor, 13.52vw 540px currentColor, 86.66vw 678px currentColor, 59.80vw 815px currentColor, 32.93vw 953px currentColor, 6.07vw 90px currentColor, 79.21vw 228px currentColor, 52.34vw 366px currentColor, 25.48vw 503px currentColor, 98.62vw 641px currentColor, 71.75vw 778px currentColor, 44.89vw 916px currentColor, 18.03vw 53px currentColor, 91.16vw 191px currentColor, 64.30vw 329px currentColor, 37.44vw 466px currentColor, 10.58vw 604px currentColor, 83.71vw 741px currentColor, 56.85vw 879px currentColor, 29.99vw 17px currentColor, 3.12vw 154px currentColor, 76.26vw 292px currentColor, 49.40vw 429px currentColor, 22.53vw 567px currentColor, 95.67vw 705px currentColor, 68.81vw 842px currentColor, 41.95vw 980px currentColor, 15.08vw 117px currentColor, 88.22vw 255px currentColor, 61.36vw 392px currentColor, 34.49vw 530px currentColor, 7.63vw 668px currentColor, 80.77vw 805px currentColor, 53.90vw 943px currentColor, 27.04vw 80px currentColor, 0.18vw 218px currentColor, 73.32vw 356px currentColor, 46.45vw 493px currentColor, 19.59vw 631px currentColor, 92.73vw 768px currentColor, 65.86vw 906px currentColor, 39.00vw 44px currentColor, 12.14vw 181px currentColor, 85.27vw 319px currentColor, 58.41vw 456px currentColor, 31.55vw 594px currentColor, 4.69vw 732px currentColor, 77.82vw 869px currentColor, 50.96vw 7px currentColor, 24.10vw 144px currentColor, 97.23vw 282px currentColor, 70.37vw 419px currentColor, 43.51vw 557px currentColor, 16.65vw 695px currentColor, 89.78vw 832px currentColor, 62.92vw 970px currentColor, 36.06vw 107px currentColor, 9.19vw 245px currentColor, 82.33vw 383px currentColor, 55.47vw 520px currentColor, 28.60vw 658px currentColor, 1.74vw 795px currentColor, 74.88vw 933px currentColor, 48.02vw 71px currentColor, 21.15vw 208px currentColor, 94.29vw 346px currentColor, 67.43vw 483px currentColor, 40.56vw 621px currentColor, 13.70vw 759px currentColor, 86.84vw 896px currentColor, 59.97vw 34px currentColor, 33.11vw 171px currentColor, 6.25vw 309px currentColor, 79.39vw 446px currentColor, 52.52vw 584px currentColor, 25.66vw 722px currentColor, 98.80vw 859px currentColor, 71.93vw 997px currentColor;
+}
+
+.star-sky-background .stars2 {
+  --star-size: 2px;
+  --star-duration: 30s;
+  --twinkle-duration: 3.5s;
+  --twinkle-delay: -1.2s;
+  --star-shadows: 19.30vw 257px currentColor, 92.44vw 394px currentColor, 65.57vw 532px currentColor, 38.71vw 669px currentColor, 11.85vw 807px currentColor, 84.99vw 945px currentColor, 58.12vw 82px currentColor, 31.26vw 220px currentColor, 4.40vw 357px currentColor, 77.53vw 495px currentColor, 50.67vw 633px currentColor, 23.81vw 770px currentColor, 96.94vw 908px currentColor, 70.08vw 45px currentColor, 43.22vw 183px currentColor, 16.36vw 320px currentColor, 89.49vw 458px currentColor, 62.63vw 596px currentColor, 35.77vw 733px currentColor, 8.90vw 871px currentColor, 82.04vw 8px currentColor, 55.18vw 146px currentColor, 28.31vw 284px currentColor, 1.45vw 421px currentColor, 74.59vw 559px currentColor, 47.72vw 696px currentColor, 20.86vw 834px currentColor, 94.00vw 972px currentColor, 67.14vw 109px currentColor, 40.27vw 247px currentColor, 13.41vw 384px currentColor, 86.55vw 522px currentColor, 59.68vw 659px currentColor, 32.82vw 797px currentColor, 5.96vw 935px currentColor, 79.10vw 72px currentColor, 52.23vw 210px currentColor, 25.37vw 347px currentColor, 98.51vw 485px currentColor, 71.64vw 623px currentColor, 44.78vw 760px currentColor, 17.92vw 898px currentColor, 91.05vw 35px currentColor, 64.19vw 173px currentColor, 37.33vw 311px currentColor, 10.47vw 448px currentColor, 83.60vw 586px currentColor, 56.74vw 723px currentColor, 29.88vw 861px currentColor, 3.01vw 999px currentColor, 76.15vw 136px currentColor, 49.29vw 274px currentColor, 22.42vw 411px currentColor, 95.56vw 549px currentColor, 68.70vw 686px currentColor, 41.84vw 824px currentColor, 14.97vw 962px currentColor, 88.11vw 99px currentColor, 61.25vw 237px currentColor, 34.38vw 374px currentColor, 7.52vw 512px currentColor, 80.66vw 650px currentColor, 53.79vw 787px currentColor, 26.93vw 925px currentColor, 0.07vw 62px currentColor;
+}
+
+.star-sky-background .stars3 {
+  --star-size: 3px;
+  --star-duration: 45s;
+  --twinkle-duration: 4.5s;
+  --twinkle-delay: -2.5s;
+  --star-shadows: 38.60vw 514px currentColor, 11.74vw 651px currentColor, 84.87vw 789px currentColor, 58.01vw 926px currentColor, 31.15vw 64px currentColor, 4.29vw 202px currentColor, 77.42vw 339px currentColor, 50.56vw 477px currentColor, 23.70vw 614px currentColor, 96.83vw 752px currentColor, 69.97vw 890px currentColor, 43.11vw 27px currentColor, 16.24vw 165px currentColor, 89.38vw 302px currentColor, 62.52vw 440px currentColor, 35.65vw 578px currentColor, 8.79vw 715px currentColor, 81.93vw 853px currentColor, 55.07vw 990px currentColor, 28.20vw 128px currentColor, 1.34vw 266px currentColor, 74.48vw 403px currentColor, 47.61vw 541px currentColor, 20.75vw 678px currentColor, 93.89vw 816px currentColor, 67.02vw 953px currentColor, 40.16vw 91px currentColor, 13.30vw 229px currentColor, 86.44vw 366px currentColor, 59.57vw 504px currentColor;
+}
+
+/* Keyframe tối ưu hóa với GPU (translate3d) */
+@keyframes animStar {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, -1000px, 0); }
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.25; }
+  100% { opacity: 1; }
+}
+
+/* The global reduced-motion rule protects the rest of the interface. These
+   decorative archive layers remain gently alive, with slower movement. */
+@media (prefers-reduced-motion: reduce) {
+  .star-sky-background { opacity: 0.35; }
+  .star-sky-background > div {
+    animation-name: animStar, twinkle !important;
+    animation-duration: 36s, 4s !important;
+    animation-timing-function: linear, ease-in-out !important;
+    animation-delay: 0s, 0s !important;
+    animation-iteration-count: infinite, infinite !important;
+    animation-direction: normal, alternate !important;
+    animation-play-state: running !important;
+  }
+  .star-sky-background .stars2 { animation-duration: 60s, 7s !important; }
+  .star-sky-background .stars3 { animation-duration: 90s, 9s !important; }
+}

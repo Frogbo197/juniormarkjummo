@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { calendarCells, downloadText, eventCalendar } from '../lib/archive'
 import { Chips, Empty, PageIntro, Tip } from './shared'
+import SaveToOrbit from '../components/SaveToOrbit'
 
 // Lịch minh họa tách riêng; không dẫn tới mua vé hoặc ghi danh giả.
 const examples = [
@@ -33,7 +34,7 @@ export default function Schedule({ showInfo }) {
   const now = new Date(),
     [year, setYear] = useState(now.getFullYear()),
     [month, setMonth] = useState(now.getMonth()),
-    [view, setView] = useState('list'),
+    [view, setView] = useState(() => window.matchMedia?.('(max-width: 640px)').matches ? 'agenda' : 'list'),
     [category, setCategory] = useState('all'),
     [demo, setDemo] = useState(false)
   const birthdays = [
@@ -60,6 +61,7 @@ export default function Schedule({ showInfo }) {
     )
     .sort((a, b) => a.date.localeCompare(b.date))
   function shift(n) {
+    if (view === 'agenda') { setYear((current) => current + n); return }
     const d = new Date(year, month + n, 1)
     setYear(d.getFullYear())
     setMonth(d.getMonth())
@@ -105,6 +107,7 @@ export default function Schedule({ showInfo }) {
           value={view}
           onChange={setView}
           options={[
+            ['agenda', 'Agenda'],
             ['list', 'Dòng thời gian'],
             ['month', 'Lịch tháng'],
           ]}
@@ -122,13 +125,13 @@ export default function Schedule({ showInfo }) {
         />
       </div>
       <div className="toolbar month-toolbar">
-        <button className="icon-button" aria-label="Tháng trước" onClick={() => shift(-1)}>
+        <button className="icon-button" aria-label={view === 'agenda' ? 'Năm trước' : 'Tháng trước'} onClick={() => shift(-1)}>
           ←
         </button>
         <h2>
-          Tháng {month + 1}, {year}
+          {view === 'agenda' ? `Agenda · ${year}` : `Tháng ${month + 1}, ${year}`}
         </h2>
-        <button className="icon-button" aria-label="Tháng sau" onClick={() => shift(1)}>
+        <button className="icon-button" aria-label={view === 'agenda' ? 'Năm sau' : 'Tháng sau'} onClick={() => shift(1)}>
           →
         </button>
         <button
@@ -141,6 +144,7 @@ export default function Schedule({ showInfo }) {
           Hôm nay
         </button>
       </div>
+      {view === 'agenda' && <nav className="date-rail" aria-label="Agenda dates">{events.map((event) => <a key={event.id} href={`#/schedule?section=event-${event.id}`}>{event.date.slice(5)} · {event.demo ? 'DEMO' : 'Birthday'}</a>)}</nav>}
       {view === 'month' ? (
         <div className="month-grid" aria-label={`Lịch tháng ${month + 1}/${year}`}>
           {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d) => (
@@ -181,13 +185,13 @@ export default function Schedule({ showInfo }) {
       ) : (
         <div className="event-list">
           {events
-            .filter((e) => Number(e.date.slice(5, 7)) === month + 1)
+            .filter((e) => view === 'agenda' || Number(e.date.slice(5, 7)) === month + 1)
             .map((e) => (
-              <article className="archive-panel event-card" key={e.id}>
+              <article className="archive-panel event-card" id={`event-${e.id}`} key={e.id}>
                 <img src={`/images/fan-photos/${e.image}`} alt="Ảnh minh họa JuniorMark" />
                 <div>
                   <span className="eyebrow">
-                    {e.date.split('-').reverse().join('/')} • {e.demo ? 'LỊCH MẪU' : 'SINH NHẬT'}
+                    {e.date.split('-').reverse().join('/')} • {e.demo ? 'DEMO / SAMPLE · LỊCH MẪU' : 'UNCONFIRMED · Archive birthday reminder'}
                   </span>
                   <h3>{e.title}</h3>
                   <p>
@@ -198,10 +202,11 @@ export default function Schedule({ showInfo }) {
                   <button className="secondary-button" onClick={() => save([e])}>
                     Lưu vào lịch ↓
                   </button>
+                  <SaveToOrbit kind="event" id={`${e.id}-${e.date}`} payload={{ title: e.title, date: e.date, demo: Boolean(e.demo) }} />
                 </div>
               </article>
             ))}
-          {!events.some((e) => Number(e.date.slice(5, 7)) === month + 1) && (
+          {!events.some((e) => view === 'agenda' || Number(e.date.slice(5, 7)) === month + 1) && (
             <Empty>Chưa có sự kiện trong tháng này.</Empty>
           )}
         </div>

@@ -25,6 +25,7 @@ const characters = [
     id: 'mark',
     name: 'Mark Jiruntanin',
     tag: 'LUNAR MELODY',
+
     image: '/images/mark-stage.png',
     description:
       'Khám phá hồ sơ Ánh Nguyệt Jiruntanin, góc âm nhạc và những khoảnh khắc được lưu giữ.',
@@ -57,9 +58,9 @@ export default function CharacterStage() {
         <h1>The Sun, The Moon & Their Orbit</h1>
         <p>Chọn nhân vật rồi bấm Discover để khám phá hồ sơ.</p>
       </header>
-      <div className="character-stage">
+      <div className={`character-stage active-${current.id}`}>
         <span className="ghost-type" aria-hidden="true">
-          KPOP IDOL
+          {current.id.toUpperCase()}
         </span>
         {characters.map((c, i) => {
           const position = (i - active + 3) % 3
