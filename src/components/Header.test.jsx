@@ -7,6 +7,16 @@ import Header from './Header'
 beforeEach(() => setLanguage('vi'))
 afterEach(() => vi.unstubAllGlobals())
 
+it('renders branding in the header and navigation in a separate floating dock', () => {
+  render(<Header auth={{}} openAuth={vi.fn()} route="studio" />)
+  const header = document.querySelector('.header-wrap')
+  const dock = document.querySelector('.floating-nav-wrap')
+  expect(header).toContainElement(document.querySelector('.header-branding .brand'))
+  expect(header).not.toContainElement(document.getElementById('main-nav'))
+  expect(dock).toContainElement(document.getElementById('main-nav'))
+  expect(dock).toHaveClass('is-floating')
+})
+
 it('keeps the closed mobile sheet inaccessible and returns keyboard focus on Escape', async () => {
   vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener() {}, removeEventListener() {} }))
   const user = userEvent.setup()

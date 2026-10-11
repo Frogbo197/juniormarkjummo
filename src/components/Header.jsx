@@ -29,6 +29,7 @@ export default function Header({ auth, openAuth, route = 'studio' }) {
   const [expanded, setExpanded] = useState(false)
   const [group, setGroup] = useState(null)
   const [hoverGroup, setHoverGroup] = useState(null)
+  const [scrolled, setScrolled] = useState(() => window.scrollY > 24)
   const [mobile, setMobile] = useState(() => window.matchMedia?.('(max-width: 899px)').matches || false)
   const menuButton = useRef(null)
   const triggers = useRef({})
@@ -36,6 +37,11 @@ export default function Header({ auth, openAuth, route = 'studio' }) {
   const openTimer = useRef(null)
   const lastMemory = findMemory(readJourney().lastMemory)
   const root = route.split('/')[0]
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 24)
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
+  }, [])
   useEffect(() => {
     const query = window.matchMedia?.('(max-width: 899px)')
     if (!query) return
@@ -67,12 +73,15 @@ export default function Header({ auth, openAuth, route = 'studio' }) {
     else { setExpanded(false); menuButton.current?.focus() }
   }
   return (
-    <header className="header-wrap archive-header" ref={header} onKeyDown={escape}>
-      <div className="site-header glass-strong">
+    <>
+    <header className="header-wrap"><div className="header-branding">
         <a className="brand" href="#/studio" aria-label={t('JuniorMark — Trang chủ', 'JuniorMark — Home')} onClick={close}>
           <span className="brand-logo"><img src="/images/juniormark-logo.png" width="36" height="36" alt="" /></span>
           <span><strong>JuniorMark</strong><small>{t('Kho kỷ niệm tinh tú', 'Celestial Archive')}</small></span>
         </a>
+      </div></header>
+    <div className={`floating-nav-wrap archive-header is-floating${scrolled ? ' is-scrolled' : ''}`} ref={header} onKeyDown={escape}>
+      <div className="site-header glass-strong">
         <nav className={expanded ? 'main-nav expanded' : 'main-nav'} id="main-nav" aria-label={t('Điều hướng chính', 'Main navigation')} aria-hidden={mobile && !expanded ? true : undefined} inert={mobile && !expanded}>
           <a href="#/studio" aria-current={root === 'studio' ? 'page' : undefined} onClick={close}>{t('Phòng thu', 'Studio')}</a>
           {groups.map(({ name, label: groupLabel, links }) => {
@@ -112,6 +121,7 @@ export default function Header({ auth, openAuth, route = 'studio' }) {
           {expanded ? <X /> : <Menu />}
         </button>
       </div>
-    </header>
+    </div>
+    </>
   )
 }

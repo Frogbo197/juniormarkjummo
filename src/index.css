@@ -10,7 +10,7 @@
   --heading: #ffdba0;
   --accent: #ffb703;
   --accent-ink: #553900;
-  --blue: #a7c8ff;
+  --blue: #145bf4;
   --pink: #ffd6d5;
   --border: #ffffff12;
   --gold-border: #ffdba026;
@@ -41,7 +41,7 @@
   --heading: #654019;
   --accent: #dca42f;
   --accent-ink: #392706;
-  --blue: #385c7a;
+  --blue: #b4d4ef;
   --pink: #8e4c50;
   --border: #77552d29;
   --gold-border: #97713944;
@@ -79,6 +79,6 @@ button, a, input { transition: background-color .2s, border-color .2s, color .2s
 .skip-link:focus { top: 12px; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { animation: none !important; }
+  *, *::before, *::after { animation: nonne !important; }
   *, *::before, *::after { transition: none !important; }
 }
