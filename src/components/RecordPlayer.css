@@ -1,19 +1,134 @@
-﻿#record-player .vinyl { animation: spin 8s linear infinite; animation-play-state: paused; }
-#record-player .vinyl.playing { animation-play-state: running; }
-@keyframes spin { to { transform: rotate(360deg); } }
-#record-player .tonearm { transform-origin: top center; transform: rotate(-24deg); transition: transform .8s ease; }
-#record-player .tonearm.playing { transform: rotate(22deg); }
-#record-player .player-details { min-width: 0; }
-#record-player .player-details h2 { font-size: clamp(23px, 2.5vw, 34px); overflow-wrap: anywhere; }
-.music-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
-.music-actions .player-controls { gap: 12px; }
-.music-volume { display: flex; gap: 8px; align-items: center; }
-.music-volume input { width: 85px; min-width: 0; accent-color: var(--accent); }
+﻿
+/* ───── Token ───── */
+.record-console { --vp-gold: #F5D061; --vp-gold-deep: #a57514; --vp-glass: rgba(255,255,255,.1); --vp-arm-rest: -22deg; --vp-arm-play: 15deg; }
+
+/* ───── Keyframes ───── */
+@keyframes cosmicGlow { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .95; transform: scale(1.06); } }
+@keyframes spin { to { transform: rotate(360deg); } }                     /* vòng halo quanh đĩa (đĩa chính quay bằng rAF, xem JSX) */
+@keyframes needleVibrate { from { transform: translate(-.4px, 0) rotate(-.4deg); } to { transform: translate(.4px, .3px) rotate(.4deg); } }
+@keyframes waveBar { from { transform: scaleY(.12); } to { transform: scaleY(var(--peak, 1)); } }
+@keyframes heartPop { 0% { transform: scale(1); } 40% { transform: scale(1.4); } 100% { transform: scale(1); } }
+@keyframes heartBurst { from { transform: rotate(var(--a)) translateY(-6px) scale(.6); opacity: 1; } to { transform: rotate(var(--a)) translateY(-26px) scale(1); opacity: 0; } }
+
+/* ───── Glassmorphism ───── */
+.record-console.panel { background: color-mix(in srgb, var(--panel, #141020) 70%, transparent); border: 1px solid var(--vp-glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.record-console .turntable { container-type: inline-size; --vp-d: clamp(180px, 78cqw, 378px); background: linear-gradient(160deg, color-mix(in srgb, var(--deep, #0a0e18) 80%, transparent), rgba(0,0,0,.35)); border: 1px solid var(--vp-glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+/* ───── Đĩa vinyl: wrap vuông → luôn tròn chuẩn ───── */
+.record-console .vp-vinyl { position: relative; z-index: 1; flex: none; width: var(--vp-d); aspect-ratio: 1 / 1; border-radius: 50%; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; box-shadow: 0 18px 25px #0008; }
+.record-console .vp-vinyl.is-scratching { cursor: grabbing; }
+
+/* Đĩa quay: rãnh + vài "mốc thị giác" quay cùng đĩa */
+.record-console .vp-disc { position: absolute; inset: 0; border-radius: 50%; container-type: inline-size; will-change: transform;
+  background:
+          radial-gradient(circle, transparent 0 36%, rgba(255,255,255,.08) 36.5% 37%, transparent 37.5% 59%, rgba(255,255,255,.06) 59.5% 60%, transparent 60.5% 81%, rgba(255,255,255,.06) 81.5% 82%, transparent 82.5%),
+          repeating-radial-gradient(circle, #141824 0 2px, #0c101b 3px 4px);
+  box-shadow: inset 0 0 0 6px #0a0e18, inset 0 0 0 7px rgba(255,255,255,.1); }
+/* Dải sáng hẹp lệch tâm trên mặt đĩa → mắt thấy rõ chuyển động quay */
+.record-console .vp-disc::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 20deg, transparent 0 7%, rgba(245,208,97,.16) 8.5% 9.5%, transparent 11% 100%); }
+/* Galaxy xoắn ốc: nằm TRONG đĩa nên quay đồng bộ. Mờ dần ở tâm và rìa để không lấn label/rãnh. */
+.record-console .vp-galaxy { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; opacity: .9;
+  background:
+          conic-gradient(from 0deg, rgba(147,51,234,.3), transparent 60deg, rgba(59,130,246,.3) 180deg, transparent 240deg, rgba(147,51,234,.3) 360deg),
+          repeating-conic-gradient(from 20deg, rgba(168,85,247,.16) 0 12deg, transparent 12deg 52deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 0 20%, #000 34%, #000 78%, transparent 97%);
+  mask-image: radial-gradient(circle, transparent 0 20%, #000 34%, #000 78%, transparent 97%);
+  filter: blur(5px); }
+/* Chấm sáng nhỏ ở rìa */
+.record-console .vp-mark { position: absolute; left: 50%; top: 7%; width: 2.4%; aspect-ratio: 1; border-radius: 50%; background: var(--vp-gold); box-shadow: 0 0 6px var(--vp-gold); transform: translateX(-50%); }
+
+/* Label: inset 32.5% trên hình vuông → đường kính 35%, tròn tuyệt đối, nội dung không thể làm nó méo */
+.record-console .vp-label { position: absolute; inset: 32.5%; box-sizing: border-box; border-radius: 50%; border: 2.2cqw solid var(--vp-gold-deep); overflow: hidden; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6cqw; text-align: center; line-height: 1.15;
+  color: var(--vp-gold); text-shadow: 0 1px 2px #000c, 0 0 8px rgba(245,208,97,.35);
+  background: radial-gradient(circle, #3b1233 0, #1d0a21 72%); }
+.record-console .vp-label strong { font-family: Georgia, serif; font-size: clamp(9px, 4.6cqw, 20px); letter-spacing: .3px; }
+.record-console .vp-label span, .record-console .vp-label small { margin: 0; font-size: clamp(6px, 2.1cqw, 9px); letter-spacing: .6px; color: #fff3c4; }
+.record-console .vp-label-side { transform: translateX(-8%); }                         /* lệch tâm → mốc chuyển động */
+.record-console .vp-label-dot { position: absolute; top: 50%; left: 50%; width: 9%; aspect-ratio: 1; margin: 0; border-radius: 50%; background: #0a0e18; box-shadow: 0 0 0 1px var(--vp-gold-deep); transform: translate(-50%, -50%); }
+@container (max-width: 240px) { .record-console .vp-label span, .record-console .vp-label small { display: none; } } /* đĩa nhỏ: bỏ chữ phụ cho khỏi chìm */
+
+/* Phản quang bất đối xứng: KHÔNG quay theo đĩa → đĩa trông như đang xoay dưới ánh đèn cố định */
+.record-console .vp-sheen { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; mix-blend-mode: overlay;
+  background: conic-gradient(from 35deg, transparent 0 8%, rgba(255,255,255,.9) 13%, transparent 21% 52%, rgba(255,235,190,.75) 62%, transparent 71%); opacity: .55; }
+.record-console .vp-sheen::after { content: ''; position: absolute; inset: 0; border-radius: 50%; mix-blend-mode: screen;
+  background: conic-gradient(from 35deg, transparent 0 9%, rgba(255,255,255,.14) 13%, transparent 20% 53%, rgba(255,235,190,.1) 62%, transparent 70%); }
+
+/* Hào quang phía sau đĩa, nhấp nháy khi đĩa quay */
+.record-console .vp-glow { position: absolute; z-index: -1; inset: -14%; border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity .8s;
+  background: radial-gradient(circle, rgba(147,51,234,.55) 40%, rgba(59,130,246,.3) 62%, transparent 72%); filter: blur(18px); }
+.record-console .vp-vinyl.is-spinning .vp-glow { opacity: .75; animation: cosmicGlow 4s ease-in-out infinite; }
+
+/* Vòng bụi tinh tú: quay riêng (ngược chiều, 40s/vòng) → khác tốc độ với đĩa tạo cảm giác nổi 3D */
+.record-console .vp-stardust { position: absolute; inset: 2.5%; border-radius: 50%; pointer-events: none; animation: spin 40s linear infinite reverse; animation-play-state: paused; }
+.record-console .vp-vinyl.is-spinning .vp-stardust { animation-play-state: running; }
+.record-console .vp-stardust b { position: absolute; inset: 0; transform: rotate(var(--a)); }
+.record-console .vp-stardust i { position: absolute; top: 0; left: 50%; width: var(--s); height: var(--s); margin-left: calc(var(--s) / -2); border-radius: 50%; background: #fff; box-shadow: 0 0 6px 1px var(--vp-gold); }
+
+/* Vòng halo chạy quanh viền khi đĩa quay */
+.record-console .vp-halo { position: absolute; inset: -3.5%; border-radius: 50%; border: 1px dashed rgba(245,208,97,.4); opacity: 0; transition: opacity .6s; pointer-events: none; }
+.record-console .vp-vinyl.is-spinning .vp-halo { opacity: 1; animation: spin 20s linear infinite; box-shadow: 0 0 22px rgba(245,208,97,.12); }
+
+/* ───── Tonearm: gốc ở góc trên-phải của đĩa, dài ~66% đường kính ───── */
+.record-console .vp-tonearm { position: absolute; z-index: 2; top: -2%; right: -2%; width: 5px; height: 66%; pointer-events: none;
+  background: linear-gradient(#ffb703, #9e8f78, #313540); border-radius: 3px; transform-origin: top center; transform: rotate(var(--vp-arm-rest)); transition: transform .8s cubic-bezier(.4, 0, .2, 1); }
+.record-console .vp-tonearm.is-down { transform: rotate(var(--vp-arm-play)); }
+.record-console .vp-tonearm::before { content: ''; position: absolute; top: -7px; left: -6px; width: 17px; height: 17px; border-radius: 50%; background: #ffb703; box-shadow: 0 0 12px #ffb703; }
+.record-console .vp-needle { position: absolute; bottom: -4px; left: -5px; width: 15px; height: 26px; border-radius: 3px; background: #92846e; transform-origin: top center; }
+.record-console .vp-tonearm.is-tracking .vp-needle { animation: needleVibrate .15s ease-in-out infinite alternate; }  /* rung rất nhẹ khi kim đang chạy trên rãnh */
+
+/* ───── Sóng âm: 6 vệt mỏng cạnh chữ ĐANG PHÁT; dừng nhạc → về chiều cao tối thiểu ───── */
+.record-console .vp-now, .music-mini .vp-now { display: inline-flex; align-items: center; gap: 8px; }
+.vp-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.vp-bars i { width: 3px; height: 100%; border-radius: 1px; background: var(--vp-gold, #F5D061); transform-origin: bottom; transform: scaleY(.2); transition: transform .3s ease; }
+.vp-bars.is-active i { animation: waveBar var(--dur) ease-in-out var(--delay) infinite alternate; }
+
+/* ───── Cụm điều khiển ───── */
+.record-console .vp-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+.record-console .vp-actions .player-controls { flex: none; gap: 10px; }
+.record-console .vp-extras { display: flex; align-items: center; gap: 10px; flex: 1 1 150px; justify-content: flex-end; min-width: 0; }
+.record-console .vp-extras .music-volume { flex: 1 1 auto; max-width: 140px; min-width: 0; }
+.record-console .music-volume { display: flex; gap: 8px; align-items: center; }
+.record-console .music-volume input { flex: 1; width: 85px; min-width: 0; accent-color: var(--accent); }
+
+/* Toggle Shuffle / Loop: inactive = mờ, active = vàng + viền + chấm báo */
+.record-console .vp-toggle { position: relative; color: var(--muted); transition: color .2s, background .2s, box-shadow .2s; }
+.record-console .vp-toggle.is-on { color: var(--vp-gold); background: rgba(245,208,97,.16); box-shadow: inset 0 0 0 1px rgba(245,208,97,.55); }
+.record-console .vp-toggle.is-on::after { content: ''; position: absolute; bottom: 3px; left: 50%; width: 4px; height: 4px; border-radius: 50%; background: var(--vp-gold); transform: translateX(-50%); }
+
+/* Yêu thích */
+.record-console .vp-heart { position: relative; color: var(--muted); }
+.record-console .vp-heart.is-on { color: #ff5c8a; }
+.record-console .vp-heart.is-on svg { animation: heartPop .45s ease; }
+.record-console .vp-burst { position: absolute; inset: 0; pointer-events: none; }
+.record-console .vp-burst i { position: absolute; top: 50%; left: 50%; margin: -6px 0 0 -4px; font-size: 10px; line-height: 12px; font-style: normal; color: #ff5c8a; animation: heartBurst .7s ease-out forwards; }
+
+/* ───── Tab (segmented control) + panel ───── */
+.record-console .vp-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid var(--vp-glass); }
+.record-console .vp-tabs button { border: 0; background: transparent; color: var(--muted); padding: 9px 10px; border-radius: 9px; font-size: 13px; font-weight: 600; transition: background .2s, color .2s; }
+.record-console .vp-tabs button.is-selected { color: var(--heading); background: var(--glow); box-shadow: inset 0 0 0 1px var(--gold-border); }
+.record-console .vp-panel { height: 232px; margin-top: 10px; border-radius: 14px; border: 1px solid var(--vp-glass); background: rgba(255,255,255,.04); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); overflow: hidden; }
+.record-console .vp-panel .tracklist { height: 100%; margin: 0; padding: 6px; box-sizing: border-box; overflow-y: auto; }
+.record-console .vp-empty { margin: 0; padding: 18px; }
+
+/* Lời bài hát: dòng hiện tại sáng + to, dòng đã hát mờ dần, mép trên/dưới mờ */
+.record-console .vp-lyrics { position: relative; height: 100%; overflow-y: auto; padding: 90px 16px; box-sizing: border-box; text-align: center; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent); mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent); }
+.record-console .vp-lyrics::-webkit-scrollbar { display: none; }
+.record-console .vp-lyric { display: block; width: 100%; border: 0; background: transparent; padding: 7px 0; font-size: 15px; line-height: 1.4; color: var(--muted); opacity: .75; transition: color .3s, opacity .3s, transform .3s; }
+.record-console .vp-lyric.is-past { opacity: .4; }
+.record-console .vp-lyric.is-active { color: var(--vp-gold); opacity: 1; font-weight: 700; transform: scale(1.08); text-shadow: 0 0 12px rgba(245,208,97,.35); }
+
+/* ───── Danh sách phát (giữ từ bản cũ) ───── */
 .music-track { display: flex; align-items: center; gap: 8px; }
-#record-player .music-track button { flex: 1; min-width: 0; }
-#record-player .music-track small { display: block; font-size: 13px; color: var(--muted); margin-top: 5px; }
+.record-console .music-track button { flex: 1; min-width: 0; }
+.record-console .music-track small { display: block; font-size: 13px; color: var(--muted); margin-top: 5px; }
 .music-track a { font-size: 13px; white-space: nowrap; color: var(--heading); padding: 12px 0; }
-.music-mini { position: fixed; bottom: 0; left: 0; width: 100%; box-sizing: border-box; z-index: 80; display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 1.2fr) minmax(120px, .5fr); align-items: center; gap: 24px; padding: 12px 5% calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--panel, #141020); border-top: 1px solid var(--gold-border); box-shadow: 0 -8px 36px #0006; color: var(--heading); }
+.record-console .player-details { min-width: 0; }
+.record-console .player-details h2 { font-size: clamp(23px, 2.5vw, 34px); overflow-wrap: anywhere; }
+
+/* ───── Mini player ───── */
+.music-mini { position: fixed; bottom: 0; left: 0; width: 100%; box-sizing: border-box; z-index: 80; display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 1.2fr) minmax(120px, .5fr); align-items: center; gap: 24px; padding: 12px 5% calc(12px + env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--panel, #141020) 78%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-top: 1px solid var(--gold-border); box-shadow: 0 -8px 36px #0006; color: var(--heading); }
 .music-mini-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .music-mini-info img { height: 50px; width: 50px; object-fit: cover; border-radius: 8px; }
 .music-mini-info > div { min-width: 0; }
@@ -26,10 +141,22 @@
 .music-mini .round-button { color: var(--heading); }
 .music-mini .scrubber { margin: 8px 0 0; }
 .music-mini .scrubber input { margin-bottom: 6px; }
+.music-mini .music-volume { display: flex; gap: 8px; align-items: center; }
+.music-mini .music-volume input { width: 85px; min-width: 0; accent-color: var(--accent); }
 .music-mini > .music-volume { justify-self: end; }
 .music-mini-spacer { height: calc(132px + env(safe-area-inset-bottom, 0px)); }
-.music-mini button:focus-visible, #record-player button:focus-visible, .music-mini input:focus-visible, #record-player input:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+/* ───── Focus ───── */
+.music-mini button:focus-visible, .record-console button:focus-visible, .music-mini input:focus-visible, .record-console input:focus-visible, .record-console a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+/* ───── Mobile ───── */
 @media (max-width: 640px) {
+  .record-console .turntable { --vp-d: clamp(180px, 58cqw, 210px); min-height: 300px; }   /* đĩa 180–210px, không tràn lề */
+  .record-console .vp-actions { gap: 10px; }
+  .record-console .vp-actions .player-controls { gap: 6px; justify-content: space-between; flex: 1 1 100%; }
+  .record-console .vp-extras { flex: 1 1 100%; justify-content: space-between; }          /* tim + volume thành 1 hàng gọn */
+  .record-console .vp-extras .music-volume { max-width: none; }
+  .record-console .vp-panel { height: 210px; }
   .music-mini { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); }
   .music-mini-info img { width: 38px; height: 38px; }
   .music-mini-playback { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 16px; }
@@ -40,8 +167,12 @@
   .music-mini .music-volume input { width: 55px; }
   .music-mini-spacer { height: calc(150px + env(safe-area-inset-bottom, 0px)); }
 }
-@media (prefers-reduced-motion: reduce) {
-  #record-player .vinyl { animation: none; }
-  #record-player .tonearm { transition: none; }
-}
 
+/* ───── Giảm chuyển động ─────
+   Chỉ tắt hiệu ứng trang trí. Đĩa quay (20s/vòng) và sóng âm nhỏ vẫn chạy vì chúng báo trạng thái "đang phát";
+   nếu tắt hết, người dùng bật "reduce motion" sẽ thấy đĩa đứng yên dù nhạc đang chạy. */
+@media (prefers-reduced-motion: reduce) {
+  .record-console .vp-halo, .record-console .vp-stardust, .record-console .vp-needle, .record-console .vp-heart svg, .record-console .vp-burst i { animation: none !important; }
+  .record-console .vp-vinyl.is-spinning .vp-glow { animation: none; opacity: .7; }
+  .record-console .vp-lyric { transition: none; }
+}

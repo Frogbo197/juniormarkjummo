@@ -61,16 +61,6 @@
 .turntable { min-height: 440px; background: var(--deep); border-radius: 16px; position: relative; display: grid; place-items: center; overflow: hidden; }
 .album-sleeve { width: 49%; height: 62%; position: absolute; left: 9%; top: 19%; transform: rotate(-7deg); border-radius: 3px; overflow: hidden; box-shadow: 0 15px 35px #0005; }
 .album-sleeve img { height: 100%; width: 100%; object-fit: cover; }
-.vinyl { width: 79%; max-width: 378px; aspect-ratio: 1; border-radius: 50%; z-index: 1; display: grid; place-items: center; background: repeating-radial-gradient(circle, #141824 0, #141824 2px, #0c101b 3px, #141824 4px); box-shadow: 0 18px 25px #0008, inset 0 0 0 8px #0a0e18; position: relative; }
-.vinyl::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(transparent 15%, #b0bad512 25%, transparent 36%, transparent 60%, #b0bad512 72%, transparent 83%); }
-.vinyl-label { border: 5px solid #a57514; width: 35%; aspect-ratio: 1; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #4f3402; background: radial-gradient(circle, #d39605 4%, #f1bc46 5%, #da9d17 70%); position: relative; text-align: center; }
-.vinyl-label strong { font-family: Georgia,serif; font-size: clamp(17px, 2vw, 23px); }
-.vinyl-label span, .vinyl-label small { font-size: 13px; letter-spacing: 1px; margin: 6px 0; }
-.vinyl-label i { width: 9px; height: 9px; border-radius: 50%; background: #0a0e18; margin-top: 5px; }
-.vinyl.playing { animation: rotate-disc 16s linear infinite; }
-.tonearm { position: absolute; height: 220px; width: 4px; background: linear-gradient(#ffb703,#9e8f78,#313540); top: 25px; right: 14%; z-index: 2; transform: rotate(12deg); transform-origin: top; }
-.tonearm::before { content: ''; position: absolute; top: -4px; left: -6px; width: 16px; height: 16px; background: #ffb703; border-radius: 50%; box-shadow: 0 0 12px #ffb703; }
-.tonearm i { position: absolute; bottom: 0; width: 14px; height: 24px; left: -5px; background: #92846e; border-radius: 2px; }
 .turntable-meta { position: absolute; bottom: 18px; left: 20px; right: 20px; display: flex; justify-content: space-between; gap: 16px; color: var(--heading); font-size: 13px; letter-spacing: .8px; }
 .turntable-meta span:last-child { color: var(--blue); text-align: right; }
 .player-details h2 { font-size: 36px; margin: 8px 0 3px; }
@@ -225,7 +215,6 @@
   .photo-tag { display: none; }
   .record-console { grid-template-columns: 1fr 1fr; padding: 24px; gap: 24px; }
   .turntable { min-height: 340px; }
-  .tonearm { height: 170px; }
   .turntable-meta { font-size: 13px; }
   .player-details h2 { font-size: 29px; }
   .jummo-section { grid-template-columns: 1fr 1.7fr; padding: 24px; gap: 24px; }
@@ -273,9 +262,6 @@
   .photo-caption p { font-size: 13px; line-height: 1.5; }
   .record-console { padding: 16px; grid-template-columns: minmax(0, 1fr); gap: 27px; border-radius: 18px; }
   .turntable { min-height: 330px; }
-  .vinyl { max-width: 295px; width: 80%; }
-  .vinyl-label strong { font-size: 20px; }
-  .tonearm { top: 19px; height: 170px; }
   .player-details { padding: 0 8px 7px; min-width: 0; }
   .player-details h2 { font-size: 32px; }
   .player-controls { justify-content: flex-start; gap: 18px; }
