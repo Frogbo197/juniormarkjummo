@@ -13,6 +13,7 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
-} catch {
-  createRoot(document.getElementById('root')).render(<StartupError />)
+} catch (error) {
+  createRoot(document.getElementById('root')).render(<StartupError detail={import.meta.env.DEV ? error.message : null} />)
 }
+

@@ -309,3 +309,17 @@
   .brand small { max-width: 124px; }
   .site-header { gap: 7px; padding-inline: 10px; }
 }
+/* A calmer home layout with consistent spacing and readable card copy. */
+.mode-immersive .hero-section { padding-bottom: 40px; }
+.hero-section > h1 { text-wrap: balance; line-height: 1.16; }
+.hero-subtitle { max-width: 650px; margin-inline: auto; text-wrap: pretty; }
+.archive-dashboard { gap: 20px; }
+.archive-dashboard h2 { line-height: 1.3; text-wrap: balance; }
+.archive-dashboard p { line-height: 1.75; }
+.story-body p, .explore-card p { font-size: 14px; line-height: 1.75; }
+.explore-card h2 { font-size: clamp(23px, 2.5vw, 29px); text-wrap: balance; }
+@media (max-width: 600px) {
+  .section-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .explore-card { padding: 22px; }
+  .dialog { padding: 30px 22px; }
+}

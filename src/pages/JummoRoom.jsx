@@ -1,237 +1,223 @@
-import { useMemo, useRef, useState } from 'react'
-import { BedDouble, BookOpen, Camera, LibraryBig, Music2, NotebookPen, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Bath, BedDouble, BookOpen, Camera, Heart, LibraryBig, Moon, Music2, NotebookPen, Sparkles, Sun, ZoomIn, ZoomOut } from 'lucide-react'
+import Dialog from '../components/Dialog'
 import { catalog } from '../data/catalog'
 import { t as tr, useLanguage, localize } from '../i18n/language'
+import useRoomActivity from '../features/jummo/useRoomActivity'
+import DiaryDialog from '../features/jummo/DiaryDialog'
+import CarePanel from '../features/jummo/CarePanel'
+import DiningRoom from '../features/jummo/DiningRoom'
+import BathRoom from '../features/jummo/BathRoom'
+import { useCareState } from '../features/jummo/careState'
+import { ACTIVITY_ART, HOTSPOTS, JUMMO_ART, ROOM_ART, SPRITE_CROP, SPRITE_WIDTH } from '../features/jummo/roomScene'
 import './JummoRoom.css'
 
-const environmentCycle = [
-  { time: 'day', rain: false },
-  { time: 'evening', rain: false },
-  { time: 'night', rain: false },
-  { time: 'day', rain: true },
-  { time: 'evening', rain: true },
-  { time: 'night', rain: true },
+const environments = [
+  { time: 'day', rain: false }, { time: 'evening', rain: false },
+  { time: 'night', rain: false }, { time: 'day', rain: true },
+  { time: 'evening', rain: true }, { time: 'night', rain: true },
 ]
 
-function makeRainDrops() {
-  return Array.from({ length: 18 }, () => {
-    const foreground = Math.random() > 0.7
-    const duration = foreground ? 4 + Math.random() * 2 : 6 + Math.random() * 4
-    const top = -15 + Math.random() * 95
-    return {
-      '--drop-left': `${Math.random() * 92 + 2}vw`,
-      '--start-top': `${top}vh`,
-      '--drop-size': `${foreground ? 200 + Math.random() * 40 : 90 + Math.random() * 30}px`,
-      '--drop-drift': `${Math.random() * 100 - 30}px`,
-      '--drop-rotation': `${Math.random() * 70 - 20}deg`,
-      animationDelay: `${Math.random()}s`,
-      animationDuration: `${duration}s`,
-      opacity: foreground ? 0.9 + Math.random() * 0.1 : 0.2 + Math.random() * 0.4,
-    }
-  })
-}
-
-function RoomOverlay({ title, label, onClose, children }) {
-  return (
-    <div className="jummo-room-overlay" role="dialog" aria-modal="true" aria-label={label}>
-      <div className="jummo-room-paper">
-        <button className="jummo-room-close" type="button" aria-label={tr('Đóng', 'Close')} onClick={onClose}>
-          <X size={18} aria-hidden="true" />
-        </button>
-        <p className="jummo-room-kicker">{tr('Một góc nhỏ của Jummo', 'A little corner of Jummo')}</p>
-        <h2>{title}</h2>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-export default function JummoRoom() {
+export default function JummoRoom({ openAuth, onBusyChange = () => {} }) {
   useLanguage()
-  const stateLabels = {
-    idle: ['Jummo', '/images/jummo-mascot.png'],
-    listening: [tr('Jummo đang nghe nhạc', 'Jummo listening'), '/jummo_dance.gif'],
-    dancing: [tr('Jummo đang nhảy múa', 'Jummo dancing'), '/jummo_dance.gif'],
-    reading: [tr('Jummo đang đọc sách', 'Jummo reading'), '/jummo_read.gif'],
-    sleeping: [tr('Jummo đang ngủ', 'Jummo sleeping'), '/sleep_mc.png'],
-  }
+  const room = useRoomActivity()
+  const care = useCareState(room.activity)
+  const [dining, setDining] = useState(false)
+  const [bathing, setBathing] = useState(false)
+  const [roomHint, setRoomHint] = useState('')
   const [environmentIndex, setEnvironmentIndex] = useState(0)
-  const [activity, setActivity] = useState('idle')
   const [overlay, setOverlay] = useState(null)
   const [taps, setTaps] = useState(0)
   const [snapshot, setSnapshot] = useState('')
+  const [photoError, setPhotoError] = useState(false)
+  const [zoomed, setZoomed] = useState(false)
+  useEffect(() => {
+    function pause() {
+      if (document.hidden) setOverlay((active) => ACTIVITY_ART[active] ? null : active)
+    }
+    document.addEventListener('visibilitychange', pause)
+    return () => document.removeEventListener('visibilitychange', pause)
+  }, [])
+  const roomImage = useRef(null)
   const jummoImage = useRef(null)
-  const environment = environmentCycle[environmentIndex]
-  const rainDrops = useMemo(() => (environment.rain ? makeRainDrops() : []), [environment.rain])
+  const environment = environments[environmentIndex]
+  const timeLabel = environment.time === 'day' ? tr('Ngày', 'Day') : environment.time === 'evening' ? tr('Chiều', 'Evening') : tr('Đêm', 'Night')
+  const windowLabel = tr(`Cửa sổ: ${timeLabel}, ${environment.rain ? 'có mưa' : 'trời quang'}`, `Window: ${timeLabel}, ${environment.rain ? 'rainy' : 'clear'}`)
+  const isSleeping = room.activity === 'sleeping'
+  const isMusic = ['listening', 'dancing'].includes(room.activity)
+  const labels = {
+    idle: tr('Jummo đang chờ bạn chơi cùng', 'Jummo is ready to play'),
+    moving: tr('Jummo đang đi tới giường…', 'Jummo is walking to bed…'),
+    sleeping: tr('Suỵt… Jummo đang ngủ ngon', 'Shh… Jummo is sleeping soundly'),
+    returning: tr('Jummo thức rồi! Đang quay lại…', 'Jummo is awake! Walking back…'),
+    listening: tr('Jummo đang nghe nhạc', 'Jummo listening'),
+    dancing: tr('Jummo đang nhảy múa', 'Jummo dancing'),
+    reading: tr('Jummo đang đọc sách', 'Jummo reading'),
+    stargazing: tr('Jummo đang ngắm sao', 'Jummo stargazing'),
+  }
+  const spriteLabel = isSleeping ? tr('Jummo đang ngủ', 'Jummo sleeping') : room.activity === 'idle' ? 'Jummo' : labels[room.activity]
   const moods = catalog.editorial_entries.filter((entry) => entry.section === 'mood')
   const book = moods.find((entry) => entry.id === 'book') || moods[0]
-  const letter = localize(catalog.editorial_entries.find((entry) => entry.section === 'letter')?.body || '')
-  const [activityLabel, activityImage] = stateLabels[activity]
+  const letter = catalog.editorial_entries.find((entry) => entry.section === 'letter')
 
-  function openDiary() {
-    setActivity('reading')
-    setOverlay('diary')
+  function enterDining() {
+    if (room.occupied) {
+      setRoomHint(room.travelling ? tr('Chờ Jummo di chuyển xong nhé.', 'Wait for Jummo to finish walking.') : tr('Đánh thức Jummo trước khi vào phòng ăn nhé.', 'Wake Jummo before entering the dining room.'))
+      return
+    }
+    room.perform('idle'); setOverlay(null); setSnapshot(''); setRoomHint(''); setDining(true)
   }
 
   function openBook() {
-    setActivity('reading')
-    setOverlay('diary')
+    if (room.occupied) return
+    room.perform('reading')
+    setOverlay('reading')
   }
-
+  function closeOverlay() {
+    setOverlay(null)
+    if (['reading', 'dancing', 'listening', 'stargazing'].includes(room.activity)) room.perform('idle')
+  }
+  function stargaze() {
+    if (room.occupied) return
+    room.perform('stargazing')
+    setOverlay('stargazing')
+  }
   function toggleRadio() {
-    setActivity((current) => {
-      if (current !== 'listening' && current !== 'dancing') return 'listening'
-      return current === 'listening' ? 'dancing' : 'listening'
-    })
+    if (room.occupied) return
+    room.perform('dancing')
+    setOverlay('dancing')
+  }
+  function goToBed() {
+    if (room.occupied) return
+    room.sleep()
+    setOverlay('sleeping')
+  }
+  function tapJummo() {
+    if (room.occupied) return
+    const next = Math.min(5, taps + 1)
+    setTaps(next)
+    if (next === 5) setOverlay('letter')
   }
 
   function captureSnapshot() {
-    const canvas = document.createElement('canvas')
-    canvas.width = 960
-    canvas.height = 600
-    const context = canvas.getContext('2d')
-    if (!context) return
-
-    context.fillStyle = environment.time === 'night' ? '#17233b' : environment.time === 'evening' ? '#b66f5c' : '#f3d39a'
-    context.fillRect(0, 0, canvas.width, canvas.height)
-    context.fillStyle = environment.rain ? '#536d83' : environment.time === 'night' ? '#283e60' : '#a5d4d2'
-    context.fillRect(595, 58, 270, 215)
-    context.fillStyle = '#79583f'
-    context.fillRect(0, 470, canvas.width, 130)
-    context.fillStyle = '#bc8d5f'
-    context.fillRect(40, 335, 205, 135)
-    context.fillRect(695, 390, 220, 80)
-    if (jummoImage.current?.complete && jummoImage.current.naturalWidth) {
-      context.drawImage(jummoImage.current, 355, 185, 250, 285)
-    }
-
+    if (room.travelling) return
+    setPhotoError(false)
     try {
+      const canvas = document.createElement('canvas')
+      canvas.width = 1678
+      canvas.height = 937
+      const context = canvas.getContext('2d')
+      if (!context || !roomImage.current?.naturalWidth || !jummoImage.current?.naturalWidth) throw new Error('Image not ready')
+      context.drawImage(roomImage.current, 0, 0, canvas.width, canvas.height)
+      if (environment.time !== 'day') {
+        context.fillStyle = environment.time === 'night' ? 'rgba(28, 18, 73, .28)' : 'rgba(237, 155, 130, .12)'
+        context.fillRect(0, 0, canvas.width, canvas.height)
+      }
+      if (environment.rain) {
+        context.strokeStyle = 'rgba(225, 225, 255, .6)'
+        context.lineWidth = 2
+        for (let x = 1305; x < 1490; x += 17) {
+          for (let y = 280; y < 435; y += 30) {
+            context.beginPath(); context.moveTo(x, y); context.lineTo(x - 5, y + 16); context.stroke()
+          }
+        }
+      }
+      const width = canvas.width * SPRITE_WIDTH / 100
+      const height = width * SPRITE_CROP.height / SPRITE_CROP.width
+      context.save()
+      context.translate(room.position.x * canvas.width / 100, room.position.y * canvas.height / 100 - height / 2)
+      if (isSleeping) context.rotate(-Math.PI / 3)
+      context.drawImage(jummoImage.current, SPRITE_CROP.x, SPRITE_CROP.y, SPRITE_CROP.width, SPRITE_CROP.height, -width / 2, -height / 2, width, height)
+      context.restore()
+      if (isSleeping) {
+        context.fillStyle = '#5d4a86'; context.font = 'bold 28px sans-serif'
+        context.fillText('Z z z', canvas.width * .3, canvas.height * .48)
+      }
       setSnapshot(canvas.toDataURL('image/png'))
-    } catch {
-      setSnapshot('')
-    }
-  }
-
-  function tapJummo() {
-    setTaps((count) => Math.min(5, count + 1))
-    if (taps >= 4) setOverlay('letter')
+    } catch { setPhotoError(true) }
   }
 
   return (
-    <div
-      className={`jummo-room scene-${environment.time}${environment.rain ? ' is-raining' : ''}`}
-      role="region"
-      aria-label={tr('Phòng của Jummo', "Jummo's Room")}
-      data-time={environment.time}
-      data-rain={environment.rain ? 'true' : 'false'}
-    >
-      <div className="jummo-room-sky" aria-hidden="true" />
-      {environment.rain && (
-        <div className="jummo-rain" aria-hidden="true">
-          {rainDrops.map((style, index) => (
-              <img
-                key={index}
-                src="/images/jummo_rain.png"
-                alt=""
-                width="135"
-                height="135"
-                style={style}
-              />
-          ))}
+    <section className="jummo-room" role="region" aria-label={tr('Phòng của Jummo', "Jummo's Room")} data-time={environment.time} data-rain={String(environment.rain)} data-activity={room.activity}>
+      <header className="jr-heading">
+        <div>
+          <span className="jr-eyebrow"><Sparkles size={14} /> {tr('MỘT GÓC NHỎ CỦA CHÚNG MÌNH', 'OUR LITTLE HAPPY PLACE')}</span>
+          <h1>Jummo’s Room<span aria-hidden="true"> ✧</span></h1>
+          <p>{tr('Ghé chơi, chạm một món đồ và ở bên Jummo một chút.', 'Come in, tap something, and spend a little time with Jummo.')}</p>
         </div>
-      )}
-
-      <div className="jummo-room-stars" aria-hidden="true">✦　·　✧　·　✦　·　✧</div>
-      <div className="jummo-room-wall" aria-hidden="true" />
-      <div className="jummo-room-floor" aria-hidden="true" />
-
-      <button
-        className="room-object room-window"
-        type="button"
-        aria-label={tr(
-          `Cửa sổ: ${environment.time === 'day' ? 'ban ngày' : environment.time === 'evening' ? 'chiều' : 'ban đêm'}${environment.rain ? ', có mưa' : ', trời quang'}`,
-          `Window: ${environment.time[0].toUpperCase()}${environment.time.slice(1)}, ${environment.rain ? 'rainy' : 'clear'}`,
-        )}
-        onClick={() => setEnvironmentIndex((index) => (index + 1) % environmentCycle.length)}
-      >
-        <span className="window-sky" aria-hidden="true"><span className="window-sun" /></span>
-        <span className="window-label">
-          {tr('Cửa sổ', 'Window')} · {tr(environment.time === 'day' ? 'Ngày' : environment.time === 'evening' ? 'Chiều' : 'Đêm', environment.time[0].toUpperCase() + environment.time.slice(1))}
-          {environment.rain ? ` · ${tr('Mưa', 'Rain')}` : ''}
-        </span>
-      </button>
-
-      <div className="room-shelf-decor" aria-hidden="true"><i /><i /><i /><i /></div>
-      <div className="room-desk" aria-hidden="true" />
-      <button className="room-object room-bookshelf" type="button" aria-label={tr('Kệ sách', 'Bookshelf')} onClick={() => setOverlay('bookshelf')}>
-        <LibraryBig aria-hidden="true" />
-        <span>{tr('Kệ sách', 'Bookshelf')}</span>
-      </button>
-      <button className="room-object room-radio" type="button" aria-label={tr('Đài radio', 'Radio')} onClick={toggleRadio}>
-        <Music2 aria-hidden="true" />
-        <span>{tr('Radio', 'Radio')}</span>
-        <i className={`radio-light${activity === 'listening' || activity === 'dancing' ? ' on' : ''}`} aria-hidden="true" />
-      </button>
-      <button className="room-object room-diary" type="button" aria-label={tr('Nhật ký', 'Diary')} onClick={openDiary}>
-        <NotebookPen aria-hidden="true" />
-        <span>{tr('Nhật ký', 'Diary')}</span>
-      </button>
-      <button className="room-object room-book" type="button" aria-label={tr('Sách', 'Book')} onClick={openBook}>
-        <BookOpen aria-hidden="true" />
-        <span>{tr('Sách', 'Book')}</span>
-      </button>
-      <button className="room-object room-camera" type="button" aria-label={tr('Máy ảnh', 'Camera')} onClick={captureSnapshot}>
-        <Camera aria-hidden="true" />
-        <span>{tr('Máy ảnh', 'Camera')}</span>
-      </button>
-      <button className="room-object room-bed" type="button" aria-label={tr('Giường', 'Bed')} onClick={() => setActivity('sleeping')}>
-        <BedDouble aria-hidden="true" />
-        <span>{tr('Giường', 'Bed')}</span>
-      </button>
-
-      <div className={`room-jummo activity-${activity}`}>
-        <button className="jummo-sprite-button" type="button" aria-label="Jummo" onClick={tapJummo}>
-          <img ref={jummoImage} src={activityImage} alt={activityLabel} />
-        </button>
-        <span className="jummo-status" aria-live="polite">{activityLabel}</span>
-        <span className="jummo-secret-hint">{tr('Chạm Jummo để tìm một điều bí mật', 'Tap Jummo to find a little secret')} · {taps}/5</span>
-      </div>
-
-      <div className="room-title">
-        <span>{tr('MỘT GÓC NHỎ ẤM ÁP', 'A LITTLE COZY CORNER')}</span>
-        <h1>Jummo’s Room</h1>
-      </div>
-
-      {snapshot && (
-        <div className="room-snapshot" role="status">
-          <img src={snapshot} alt={tr('Ảnh chụp phòng', 'Room snapshot')} />
-          <a href={snapshot} download="jummos-room.png">{tr('Lưu ảnh', 'Save snapshot')}</a>
-          <button type="button" aria-label={tr('Đóng ảnh chụp', 'Close snapshot')} onClick={() => setSnapshot('')}><X size={16} /></button>
+        <span className="jr-home-badge"><span /> {tr('Jummo đang ở nhà', 'Jummo is home')}</span>
+      </header>
+      {care.saveError && <p role="alert">{tr('Chưa lưu được tiến trình trên trình duyệt này. Hãy kiểm tra quyền lưu trữ.', 'Progress could not be saved in this browser. Check storage permissions.')}</p>}
+      {bathing ? <BathRoom stats={care.stats} completeBath={care.completeBath} onBack={() => setBathing(false)} /> : dining ? <DiningRoom stats={care.stats} completeMeal={care.completeMeal} onBusyChange={onBusyChange} onBack={() => setDining(false)} /> : <>
+      <div className="jr-room-card">
+        <div className="jr-scene-toolbar">
+          <span><Moon size={16} /> {tr('Góc phòng lavender', 'The lavender corner')}</span>
+          <div>
+            <span className="jr-weather">{timeLabel}{environment.rain ? ` · ${tr('Mưa', 'Rain')}` : ''}</span>
+            <button type="button" className="jr-icon-button" aria-label={zoomed ? tr('Thu nhỏ phòng', 'Zoom out') : tr('Phóng to phòng', 'Zoom in')} aria-pressed={zoomed} onClick={() => setZoomed(!zoomed)}>{zoomed ? <ZoomOut size={18} /> : <ZoomIn size={18} />}</button>
+          </div>
         </div>
-      )}
-
-      {overlay === 'diary' && (
-        <RoomOverlay label={tr('Nhật ký của Jummo', 'Jummo’s diary')} title={localize(book?.title || tr('Nhật ký', 'A quiet page'))} onClose={() => setOverlay(null)}>
-          <BookOpen className="room-paper-icon" aria-hidden="true" />
-          <p>{localize(book?.body || tr('Một trang sách đang chờ được bổ sung.', 'A quiet page is waiting to be filled.'))}</p>
-          <p className="room-paper-note">{localize(book?.subtitle || '')}</p>
-        </RoomOverlay>
-      )}
-      {overlay === 'bookshelf' && (
-        <RoomOverlay label={tr('Kệ sách của Jummo', 'Jummo’s bookshelf')} title={tr('Những cuốn sách ưa thích', 'Favorite stories')} onClose={() => setOverlay(null)}>
-          {book ? (
-            <button className="room-book-choice" type="button" aria-label={localize(book.title)} onClick={openBook}>
-              <BookOpen aria-hidden="true" />
-              <span><b>{localize(book.title)}</b><small>{localize(book.subtitle || book.body)}</small></span>
+        <div className="jr-care-scene">
+        <CarePanel stats={care.stats} />
+        <div className={`jr-scene-scroll${zoomed ? ' is-zoomed' : ''}`} tabIndex={zoomed ? 0 : undefined} role="group" aria-label={tr('Khung cảnh phòng', 'Room scene')}>
+          <div className={`jr-scene scene-${environment.time}`}>
+            <img ref={roomImage} className="jr-room-art" src={ROOM_ART} alt={tr('Căn phòng tím với giường bên trái, bàn nhạc và cửa sổ bên phải', 'A lavender bedroom with a bed on the left, a record player and a window on the right')} draggable="false" />
+            <div className="jr-lighting" aria-hidden="true" />
+            {environment.rain && <div className="jr-window-rain" aria-hidden="true" />}
+            <button type="button" className={`jr-hotspot jr-bed${isSleeping ? ' is-active' : ''}`} style={HOTSPOTS.bed} aria-label={tr('Giường', 'Bed')} disabled={room.occupied} onClick={goToBed}>
+              <span className="jr-object-label"><BedDouble size={15} /> {tr('Ngủ một chút', 'Take a nap')}<span aria-hidden="true"> ↗</span></span>
             </button>
-          ) : <p>{tr('Kệ sách đang chờ thêm câu chuyện.', 'The bookshelf is waiting for more stories.')}</p>}
-        </RoomOverlay>
-      )}
-      {overlay === 'letter' && (
-        <RoomOverlay label={tr('Thư bí mật', 'Secret letter')} title={localize(catalog.editorial_entries.find((entry) => entry.section === 'letter')?.title || tr('Gửi các vì sao thân yêu', 'Dear beloved stars'))} onClose={() => setOverlay(null)}>
-          <p className="room-letter-copy">{letter}</p>
-        </RoomOverlay>
-      )}
-    </div>
+            <button type="button" className="jr-hotspot jr-window" style={HOTSPOTS.window} aria-label={windowLabel} onClick={() => setEnvironmentIndex((index) => (index + 1) % environments.length)}>
+              <span className="jr-object-label"><Sun size={15} /> {tr('Cửa sổ', 'Window')}</span>
+            </button>
+            <button type="button" className={`jr-hotspot jr-radio${isMusic ? ' is-active' : ''}`} style={HOTSPOTS.radio} aria-label={tr('Đài radio', 'Radio')} disabled={room.occupied} onClick={toggleRadio}>
+              <span className="jr-object-label"><Music2 size={15} /> {tr('Nhạc', 'Music')}</span>
+            </button>
+            <button type="button" className="jr-hotspot jr-bookshelf" style={HOTSPOTS.bookshelf} aria-label={tr('Kệ sách', 'Bookshelf')} disabled={room.occupied} onClick={() => setOverlay('bookshelf')}>
+              <span className="jr-object-label"><LibraryBig size={15} /> {tr('Sách', 'Books')}</span>
+            </button>
+            <div className={`jr-character activity-${room.activity}`} data-facing={room.facing} style={{ left: `${room.position.x}%`, top: `${room.position.y}%`, '--travel-time': `${room.duration}ms`, '--sprite-width': `${SPRITE_WIDTH}%` }}>
+              <span className="jr-character-shadow" aria-hidden="true" />
+              <button type="button" className="jr-character-button" aria-label="Jummo" disabled={room.occupied} onClick={tapJummo}>
+                <span className="jr-sprite-crop"><img ref={jummoImage} src={JUMMO_ART} alt={spriteLabel} draggable="false" /></span>
+              </button>
+              {isSleeping && <span className="jr-sleep-bubble" aria-hidden="true">Z<span>z</span><small>z</small></span>}
+              {isMusic && <span className="jr-notes" aria-hidden="true">♪ ♫</span>}
+              {room.activity === 'reading' && <BookOpen className="jr-reading-book" aria-hidden="true" />}
+            </div>
+          </div>
+        </div>
+        </div>
+        <div className="jr-status-bar">
+            <strong role="status" aria-live="polite">{labels[room.activity]}</strong>
+        </div>
+      </div>
+      <nav className="jr-actions" aria-label={tr('Hoạt động trong phòng', 'Room activities')}>
+        <button type="button" aria-label={tr('Ăn uống', 'Dining room')} onClick={enterDining}><Heart size={19} /> {tr('Ăn uống', 'Dining')}</button>
+        <button type="button" disabled={room.occupied} onClick={() => { room.perform('idle'); setOverlay(null); setSnapshot(''); setBathing(true) }}><Bath size={19} /> {tr('Tắm', 'Bath')}</button>
+        <button type="button" disabled={room.travelling} onClick={isSleeping ? room.wake : goToBed}>{isSleeping ? <Sun size={19} /> : <BedDouble size={19} />}{isSleeping ? tr('Đánh thức', 'Wake up') : room.travelling ? tr('Đang đi…', 'Walking…') : tr('Ngủ', 'Go to bed')}</button>
+        <button type="button" disabled={room.occupied} onClick={toggleRadio}><Music2 size={19} /> {tr('Nghe nhạc', 'Music time')}</button>
+        <button type="button" disabled={room.occupied} aria-label={tr('Đọc sách', 'Book')} onClick={openBook}><BookOpen size={19} /> {tr('Đọc sách', 'Read')}</button>
+        <button type="button" disabled={room.occupied} onClick={stargaze}><Sparkles size={19} /> {tr('Ngắm sao', 'Stargaze')}</button>
+        <button type="button" aria-label={tr('Nhật ký', 'Diary')} onClick={() => setOverlay('diary')}><NotebookPen size={19} /> {tr('Nhật ký', 'Diary')}</button>
+        <button type="button" disabled={room.travelling} aria-label={tr('Chụp ảnh', 'Camera')} onClick={captureSnapshot}><Camera size={19} /> {tr('Chụp ảnh', 'Photo')}</button>
+      </nav>
+      {roomHint && <p className="jr-room-hint" role="alert">{roomHint}</p>}
+      <p className="jr-footnote"><Sparkles size={14} /> {zoomed ? tr('Vuốt ngang để khám phá căn phòng đã phóng to.', 'Swipe sideways to explore the enlarged room.') : tr('Chạm Jummo 5 lần để mở một lời nhắn bí mật.', 'Tap Jummo 5 times for a secret little message.')} <span>{taps}/5</span></p>
+      {photoError && <p className="jr-photo-error" role="alert">{tr('Ảnh chưa sẵn sàng. Chờ phòng tải xong rồi chụp lại nhé.', 'The picture is not ready. Let the room finish loading, then try again.')}</p>}
+      {snapshot && <Dialog title={tr('Một khoảnh khắc cùng Jummo', 'A moment with Jummo')} onClose={() => setSnapshot('')} className="jr-dialog">
+        <img className="jr-snapshot" src={snapshot} alt={tr('Ảnh chụp phòng', 'Room snapshot')} />
+        <a className="jr-primary-button" href={snapshot} download="jummos-room.png">{tr('Lưu ảnh', 'Save snapshot')}</a>
+      </Dialog>}
+      {overlay === 'diary' && <DiaryDialog onClose={closeOverlay} openAuth={openAuth} />}
+      {ACTIVITY_ART[overlay] && <Dialog title={overlay === 'stargazing' ? tr('Ngắm sao cùng Jummo', 'Stargaze with Jummo') : overlay === 'reading' ? tr('Đọc sách cùng Jummo', 'Read with Jummo') : overlay === 'dancing' ? tr('Nhảy múa cùng Jummo', 'Dance with Jummo') : tr('Chúc Jummo ngủ ngon', 'Sweet dreams, Jummo')} onClose={closeOverlay} className="jr-dialog jr-animation-dialog">
+        <img className="jr-activity-gif" src={ACTIVITY_ART[overlay]} alt={overlay === 'stargazing' ? tr('Jummo đang ngắm sao', 'Jummo stargazing') : overlay === 'reading' ? tr('Jummo đang đọc sách', 'Jummo reading') : overlay === 'dancing' ? tr('Jummo đang nhảy múa', 'Jummo dancing') : tr('Jummo đang ngủ', 'Jummo sleeping')} />
+      </Dialog>}
+      {['bookshelf', 'letter'].includes(overlay) && <Dialog title={overlay === 'bookshelf' ? tr('Kệ sách của Jummo', 'Jummo’s bookshelf') : tr('Thư bí mật', 'Secret letter')} onClose={closeOverlay} className="jr-dialog">
+        <span className="jr-eyebrow">{tr('MỘT GÓC NHỎ CỦA JUMMO', 'A LITTLE CORNER OF JUMMO')}</span>
+        {overlay === 'bookshelf' ? book ? <button className="jr-book-choice" type="button" aria-label={localize(book.title)} onClick={openBook}><BookOpen /><span><b>{localize(book.title)}</b><small>{localize(book.subtitle || book.body)}</small></span></button> : <p>{tr('Kệ sách đang chờ thêm câu chuyện.', 'The bookshelf is waiting for more stories.')}</p> : <><h3>{localize((overlay === 'letter' ? letter : book)?.title || '')}</h3><p className="jr-letter">{localize((overlay === 'letter' ? letter : book)?.body || '')}</p></>}
+      </Dialog>}
+      </>}
+    </section>
   )
 }

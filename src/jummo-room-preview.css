@@ -1,0 +1,3 @@
+body:has(.jummo-preview) { color-scheme: light; background: #f4eef8; }
+.jummo-preview { max-width: 1280px; min-height: 100svh; margin: 0 auto; padding: 28px; }
+@media (max-width: 600px) { .jummo-preview { padding: 12px; } }

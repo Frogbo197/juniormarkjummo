@@ -17,7 +17,7 @@ export default function ArchiveDashboard() {
       <a className="text-button" href="#/schedule">{t("Khám phá lịch kỷ niệm ↗", "Explore Orbit dates ↗")}</a>
     </div>
     <article className="dashboard-memory glass-medium">
-      <span className="eyebrow">{t("Kỷ niệm hôm nay · luân phiên biên tập, UTC+7", "Memory of the Day · curated rotation, UTC+7")}</span>
+      <span className="eyebrow">{t("Kỷ niệm hôm nay", "Memory of the day")}</span>
       <h2>{localize(daily.title)}</h2><p>{localize(daily.summary)}</p>
       <a className="primary-button" href={`#/timeline?memory=${daily.id}&era=${daily.era}`}>{t("Khám phá kỷ niệm này ↗", "Explore this memory ↗")}</a>
     </article>
@@ -25,7 +25,7 @@ export default function ArchiveDashboard() {
       <h3>{t("Tiếp tục hành trình của bạn", "Continue Your Journey")}</h3>
       <p>{last ? t(`Lần khám phá gần nhất: ${localize(last.title)}`, `Last explored: ${localize(last.title)}`) : t('Chương đầu tiên đang chờ bạn.', 'Your first chapter is waiting.')} · {t(`${journey.visited.length}/${memories.length} kỷ niệm đã khám phá trên trình duyệt này.`, `${journey.visited.length}/${memories.length} memories explored on this browser.`)}</p>
       <a className="text-button" href={`#/timeline?era=${last?.era || 'cherry'}`}>{last ? t('Trở lại kỷ niệm của bạn', 'Return to your memory') : t('Bắt đầu với Cherry Magic', 'Begin with Cherry Magic')} ↗</a>
-      <p>{t("Jummo gợi ý: theo một ngôi sao, rồi khám phá ảnh gốc trong thư viện hình ảnh.", "Jummo suggests: follow one star, then discover its original photo in the Visual Archive.")}</p>
     </div>
   </section>
 }
+

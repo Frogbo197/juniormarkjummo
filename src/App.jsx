@@ -81,10 +81,11 @@ function HomePage({ setPlayerSlot }) {
       <Header auth={auth} openAuth={openAuth} route={route} />
       {/* 1. Các khối trang chủ theo thứ tự frame Studio Home trong Figma. */}
       <main className={`page-content mode-${['studio', 'timeline', 'profiles', 'jummo', 'sky'].includes(route) ? 'immersive' : route.startsWith('profiles/') || route === 'media' ? 'editorial' : 'utility'}`} id="main" tabIndex={-1}>
-      <JummoCompanion route={route} />
+      {route !== 'studio' && <JummoCompanion route={route} />}
         {route === 'studio' ? (
           <>
             <Hero />
+            <JummoCompanion route={route} />
             <ArchiveDashboard />
             <div id="record-player" ref={setPlayerSlot} />
             <Birthdays />
@@ -148,7 +149,7 @@ function HomePage({ setPlayerSlot }) {
             openAuth={openAuth}
           />
         ) : route === 'jummo' ? (
-          <JummoWorld openPhoto={openPhoto} showInfo={showInfo} />
+          <JummoWorld openPhoto={openPhoto} showInfo={showInfo} openAuth={openAuth} />
         ) : route === 'account' ? (
           <AccountPage openAuth={openAuth} />
         ) : route === 'orbit' ? (
@@ -163,7 +164,6 @@ function HomePage({ setPlayerSlot }) {
         )}
       </main>
       <Footer />
-      {!['account','orbit'].includes(route) && <div className="account-actions" style={{justifyContent:'center',marginBottom:24}}><SaveToOrbit kind="page" id={route} payload={{title:document.title+' · '+route,url:'#/'+route}}/><a className="text-button" href="#/account">{t("Góc cá nhân ↗", "Your corner ↗")}</a></div>}
       {auth.passwordMessage && <p className="notice" role="status">{localize(auth.passwordMessage)}</p>}
       {auth.recoveryOpen && <Dialog title={t("Khôi phục mật khẩu", "Reset password")} onClose={auth.dismissRecovery}><PasswordForm auth={auth}/></Dialog>}
       {dialog?.type === 'info' && (
@@ -268,3 +268,5 @@ export default function App() {
     </AuthProvider>
   )
 }
+
+
