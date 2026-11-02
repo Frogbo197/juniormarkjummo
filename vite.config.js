@@ -5,6 +5,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     plugins: [react()],
+    build: { rolldownOptions: { input: ['index.html', 'jummo-room.html'] } },
     server: {
       host: '127.0.0.1', strictPort: true, port: 5173,
       fs: { deny: ['**/.local/**', '**/.env*', '**/.git/**', '**/*.{pem,key,crt}'] },

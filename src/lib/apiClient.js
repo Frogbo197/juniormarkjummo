@@ -33,13 +33,10 @@ export function createApiClient() {
   async function initialize() {
     const params = new URLSearchParams(location.hash.split('?')[1])
     const recovery = params.get('recovery')
+    if (recovery) history.replaceState(null, '', location.pathname + location.search + '#/account')
     const result = recovery
       ? await request('auth/recover', { token: recovery })
       : await request('auth/session', null, 'GET')
-    if (recovery) {
-      params.delete('recovery')
-      history.replaceState(null, '', location.pathname + location.search + '#/account')
-    }
     emit(
       result.data?.session?.recovery ? 'PASSWORD_RECOVERY' : 'INITIAL_SESSION',
       result.data?.session || null,

@@ -35,6 +35,7 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} {t('Cộng đồng JuniorMark. Được tạo nên bằng ánh sao và yêu thương.', 'JuniorMark Fanclub. Crafted with starlight & love.')}</p>
           <p>{t("Trang người hâm mộ không chính thức • Nguồn ảnh trong thư viện", "Unofficial fansite • Photo credits in the gallery")}</p>
           <div className="footer-extra">
+            <a href="/beta.html">{t("Thử và góp ý", "Beta feedback")}</a>
             <a href="#/profiles/junior">{t("Ghi chú bên đĩa nhạc", "Liner Notes")}</a>
             <a href="#/studio?section=record-player">{t("Tần số vũ trụ", "Cosmic Frequency")}</a>
             <a href="#/jummo">{t("Câu chuyện linh vật Jummo", "Jummo Mascot Lore")}</a>

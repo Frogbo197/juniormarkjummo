@@ -81,7 +81,7 @@ function Player({ heroTarget } = {}) {
   const [error, setError] = useState('')
   const [showMini, setShowMini] = useState(false)
   const [activeTab, setActiveTab] = useState('playlist') // 'playlist' | 'lyrics'
-  const [loopMode, setLoopMode] = useState('off')        // 'off' | 'all' | 'one'
+  const [loopMode, setLoopMode] = useState('all')        // 'off' | 'all' | 'one'
   const [shuffle, setShuffle] = useState(false)
   const [likedTitles, setLikedTitles] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LIKES_KEY)) || [] } catch { return [] }
@@ -145,7 +145,7 @@ function Player({ heroTarget } = {}) {
      isPlaying đổi → tonearm đổi class ngay (CSS transition .8s).
      `spinning` bật trễ NEEDLE_DROP_MS khi phát, tắt ngay khi dừng. */
   useEffect(() => {
-    if (!isPlaying) { setSpinning(false); return }
+    if (!isPlaying) return
     const id = setTimeout(() => setSpinning(true), NEEDLE_DROP_MS)
     return () => clearTimeout(id)
   }, [isPlaying])
@@ -154,7 +154,7 @@ function Player({ heroTarget } = {}) {
      Vận tốc tiến dần về mục tiêu (quán tính): tăng tốc êm khi bắt đầu, giảm tốc dần khi dừng.
      Dùng JS thay vì CSS animation để cho phép kéo/scratch đĩa mà không bị giật góc. */
   const paintDisc = () => { if (discRef.current) discRef.current.style.transform = `rotate(${angle.current}deg)` }
-  const frame = useCallback((now) => {
+  const frame = useCallback(function nextFrame(now) {
     const dt = Math.min(0.05, (now - lastTs.current) / 1000)
     lastTs.current = now
     if (!dragging.current) {
@@ -164,7 +164,7 @@ function Player({ heroTarget } = {}) {
       if (discRef.current) discRef.current.style.transform = `rotate(${angle.current}deg)`
       if (!target && Math.abs(velocity.current) < 0.5) { velocity.current = 0; raf.current = 0; return } // đã dừng hẳn
     }
-    raf.current = requestAnimationFrame(frame)
+    raf.current = requestAnimationFrame(nextFrame)
   }, [])
   const kick = useCallback(() => {
     if (raf.current) return
@@ -217,6 +217,8 @@ function Player({ heroTarget } = {}) {
     kick()
   }
 
+  const stopPlaying = useCallback(() => { setIsPlaying(false); setSpinning(false) }, [])
+
   /* ── Điều khiển phát ── */
   const playAudio = useCallback(async () => {
     const token = ++request.current
@@ -226,29 +228,29 @@ function Player({ heroTarget } = {}) {
     catch {
       if (token !== request.current) return
       wantsPlay.current = false
-      setIsPlaying(false)
+      stopPlaying()
       setError('playback-error')
     }
-  }, [])
+  }, [stopPlaying])
   const pauseAudio = useCallback(() => {
     request.current++
     wantsPlay.current = false
     audio.current.pause()
-    setIsPlaying(false)
-  }, [])
+    stopPlaying()
+  }, [stopPlaying])
   const selectTrack = useCallback((index) => {
     request.current++
     audio.current.pause()
     active.current = (index + tracks.length) % tracks.length
     setSelected(active.current)
-    setIsPlaying(false)
+    stopPlaying()
     setCurrentTime(0)
     setDuration(0)
     // Gán nguồn và phát ngay trong user gesture để chạy được trên mobile.
     audio.current.src = tracks[active.current].audioSrc
     audio.current.load()
     void playAudio()
-  }, [playAudio])
+  }, [playAudio, stopPlaying])
   // Chỉ số bài kế tiếp/trước; khi shuffle bật, "tiếp theo" là bài ngẫu nhiên khác bài hiện tại.
   const step = useCallback((dir) => {
     if (shuffleRef.current && dir > 0 && tracks.length > 1) {
@@ -380,7 +382,7 @@ function Player({ heroTarget } = {}) {
           <div className="album-sleeve"><img src="/images/fan-photos/HNwNJ4GbsAE5PwW.jpg" alt={t("JuniorMark trên bìa đĩa", "JuniorMark on the record sleeve")} loading="lazy" /></div>
 
           {/* Đĩa: wrap tĩnh (hình vuông → luôn tròn) chứa đĩa quay + lớp phản quang đứng yên + kim */}
-          <div ref={wrapRef} className={`vp-vinyl ${spinning ? 'is-spinning' : ''} ${isScratching ? 'is-scratching' : ''}`} aria-hidden="true"
+          <div ref={wrapRef} className={`vp-vinyl vinyl ${isPlaying ? 'playing' : ''} ${spinning ? 'is-spinning' : ''} ${isScratching ? 'is-scratching' : ''}`} aria-hidden="true"
                onPointerDown={onDiscDown} onPointerMove={onDiscMove} onPointerUp={onDiscUp} onPointerCancel={onDiscUp}>
             <span className="vp-glow" /><span className="vp-halo" />
             <div ref={discRef} className="vp-disc">
@@ -439,13 +441,13 @@ function Player({ heroTarget } = {}) {
              // Bỏ qua pause cũ còn trong hàng đợi nếu nguồn mới đang phát.
              if (!audio.current.paused) return
              wantsPlay.current = false
-             setIsPlaying(false)
-           }} onWaiting={() => setIsPlaying(false)}
+             stopPlaying()
+           }} onWaiting={() => stopPlaying()}
            onEnded={handleEnded}
            onTimeUpdate={() => { if (!dragging.current) setCurrentTime(audio.current.currentTime) }}
            onDurationChange={() => setDuration(Number.isFinite(audio.current.duration) ? audio.current.duration : 0)}
            onLoadedMetadata={() => setDuration(Number.isFinite(audio.current.duration) ? audio.current.duration : 0)}
-           onError={() => { wantsPlay.current = false; setIsPlaying(false); setError('playback-error') }} />
+           onError={() => { wantsPlay.current = false; stopPlaying(); setError('playback-error') }} />
     {showMini && createPortal(<><section className="music-mini" aria-label={t("Trình phát thu nhỏ", "Mini player")}>
       <div className="music-mini-info"><img src="/images/fan-photos/HNwNJ4GbsAE5PwW.jpg" alt="" /><div><strong>{track.title}</strong><small>{track.artist}</small><span>{error ? t('Không thể phát âm thanh. Vui lòng thử lại.', 'Unable to play audio. Please try again.') : (isPlaying ? t('Đang phát', 'Playing') : t('Sẵn sàng phát', 'Ready to play'))}</span></div></div>
       <div className="music-mini-playback">{controls(false)}{progress('mini')}</div>

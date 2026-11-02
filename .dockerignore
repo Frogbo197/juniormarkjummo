@@ -1,0 +1,13 @@
+*
+!package*.json
+!vite.config.js
+!*.html
+!src
+!src/**
+!public
+!public/**
+!deploy
+!deploy/nginx.conf
+**/.env*
+**/*.pem
+**/*.key
